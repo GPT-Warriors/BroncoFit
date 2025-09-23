@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="vite-gradient" x1="6" y1="30" x2="26" y2="2">
+      <stop offset="0%" stop-color="#ff6b35"/>
+      <stop offset="100%" stop-color="#f7931e"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#vite-gradient)" d="M29.884 6.146L16.114 29.084a2.5 2.5 0 01-4.228 0L-1.884 6.146a2.5 2.5 0 012.114-3.854h23.54a2.5 2.5 0 012.114 3.854z"/>
+  <path fill="#ffffff" d="M24.5 5.5l-8.5 15-8.5-15h17z"/>
+</svg>
+
