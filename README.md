@@ -202,7 +202,7 @@ This project is licensed under the ISC License.
 
 ## 👥 Team
 
-**GPT-Warriors** - CS 2250 Class Project
+**GPT-Warriors** - CS 4800 Class Project
 
 ---
 
