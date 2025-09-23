@@ -73,7 +73,18 @@ app.get('/api/diets', (req, res) => {
         'Vegetarian',
         'Gluten-free'
     ];
-})
+});
+
+// Macronutrient Info
+app.get('/api/macros', (req, res) => {
+    res.send(
+        "Macronutrients (Macros):\n" +
+        "Carbohydrates - Provide energy for muscles and the brain\n" +
+        "Protein - Builds and repairs tissues and supports immune function\n" +
+        "Fats - Provide energy, support hormone production, and absorb essential nutrients"
+    );
+});
+
 
 // Health check endpoint
 app.get('/health', (req, res) => {
