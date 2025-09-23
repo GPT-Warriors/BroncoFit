@@ -65,6 +65,15 @@ app.post('/api/coach', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+app.get('/api/diets', (req, res) => {
+    const diets = [
+        'Mediterranean',
+        'Keto',
+        'Vegan',
+        'Vegetarian',
+        'Gluten-free'
+    ];
+})
 
 // Health check endpoint
 app.get('/health', (req, res) => {
