@@ -84,8 +84,13 @@ app.get('/api/macros', (req, res) => {
         "Fats - Provide energy, support hormone production, and absorb essential nutrients"
     );
 });
-
-
+//Compound movements 
+//http://localhost:3001/api/compoundMovements
+app.get('/api/compoundMovements', (req, res) => {
+    res.send(
+        "SBD: \n" + "Squat\n"+"Bench\n"+"Deadlift"
+    );
+});
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'BroncoFit API' });
