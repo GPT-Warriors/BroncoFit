@@ -198,4 +198,85 @@ public class FitnessCalculatorTest {
         assertTrue("Male ideal weight should be higher than female at same height",
                    maleRange[0] > femaleRange[0] && maleRange[1] > femaleRange[1]);
     }
+    private final FitnessCalculator calc = new FitnessCalculator();
+
+    // -------------------------------
+    // UNIT CONVERSION TESTS
+    // -------------------------------
+
+    @Test
+    public void testPoundsToKg() {
+        assertEquals(45.36, calc.poundsToKg(100), 0.01);
+    }
+
+    @Test
+    public void testKgToPounds() {
+        assertEquals(220.46, calc.kgToPounds(100), 0.01);
+    }
+
+    @Test
+    public void testInchesToCm() {
+        assertEquals(254.0, calc.inchesToCm(100), 0.01);
+    }
+
+    @Test
+    public void testCmToInches() {
+        assertEquals(39.37, calc.cmToInches(100), 0.01);
+    }
+
+    @Test
+    public void testConversionInverse() {
+        // Round-trip test for precision
+        double kg = 72.5;
+        double pounds = calc.kgToPounds(kg);
+        assertEquals(kg, calc.poundsToKg(pounds), 0.001);
+    }
+
+    @Test
+    public void testConversionInvalidValues() {
+        assertThrows(IllegalArgumentException.class, () -> calc.poundsToKg(0));
+        assertThrows(IllegalArgumentException.class, () -> calc.kgToPounds(-5));
+        assertThrows(IllegalArgumentException.class, () -> calc.inchesToCm(0));
+        assertThrows(IllegalArgumentException.class, () -> calc.cmToInches(-10));
+    }
+
+    // -------------------------------
+    // HEALTH SUMMARY TESTS
+    // -------------------------------
+
+    @Test
+    public void testGenerateHealthSummaryNormalCase() {
+        String summary = calc.generateHealthSummary("female", 60, 160, 25, "moderately active");
+
+        assertTrue(summary.contains("BMI:"));
+        assertTrue(summary.contains("BMR:"));
+        assertTrue(summary.contains("TDEE:"));
+        assertTrue(summary.contains("Female"));
+        assertTrue(summary.contains("Normal weight"));
+    }
+
+    @Test
+    public void testGenerateHealthSummaryMale() {
+        String summary = calc.generateHealthSummary("male", 80, 180, 30, "lightly active");
+        assertTrue(summary.contains("Male"));
+        assertTrue(summary.contains("BMI:"));
+    }
+
+    @Test
+    public void testGenerateHealthSummaryInvalidInputs() {
+        assertThrows(IllegalArgumentException.class, () ->
+                calc.generateHealthSummary("female", -60, 160, 25, "moderately active"));
+        assertThrows(IllegalArgumentException.class, () ->
+                calc.generateHealthSummary("male", 70, 0, 25, "active"));
+        assertThrows(IllegalArgumentException.class, () ->
+                calc.generateHealthSummary("male", 70, 180, -5, "moderately active"));
+    }
+
+    @Test
+    public void testGenerateHealthSummaryActivityLevelCaseInsensitive() {
+        // Should still work even if activity level uses uppercase
+        String summary = calc.generateHealthSummary("female", 55, 165, 22, "VERY ACTIVE");
+        assertTrue(summary.contains("TDEE"));
+    }
+}
 }
