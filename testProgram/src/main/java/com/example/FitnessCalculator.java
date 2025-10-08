@@ -144,4 +144,21 @@ public class FitnessCalculator {
                 throw new IllegalArgumentException("Unknown activity level. Use: sedentary, lightly active, moderately active, very active, or extra active.");
         }
     }
+    public double poundsToKg(double pounds) { return pounds * 0.453592; }
+    public double kgToPounds(double kg) { return kg / 0.453592; }
+    public double inchesToCm(double inches) { return inches * 2.54; }
+    public double cmToInches(double cm) { return cm / 2.54; }
+
+    public String generateHealthSummary(String sex, double weightKg, double heightCm, int age, String activityLevel) {
+        double bmi = calculateBMI(weightKg, heightCm / 100);
+        String bmiClass = classifyBMI(bmi);
+        double bmr = calculateBMR(sex, weightKg, heightCm, age);
+        double tdee = calculateTDEE(bmr, activityLevel);
+
+        return String.format(
+                "Health Summary:\nBMI: %.2f (%s)\nBMR: %.2f kcal/day\nTDEE: %.2f kcal/day\n",
+                bmi, bmiClass, bmr, tdee
+        );
+    }
+
 }
