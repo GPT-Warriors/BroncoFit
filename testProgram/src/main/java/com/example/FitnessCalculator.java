@@ -22,4 +22,92 @@ public class FitnessCalculator {
             return "Obese";
         }
     }
+
+    // Calculates body fat percentage using Navy Method
+    // waistCm: waist circumference in cm, neckCm: neck circumference in cm
+    // hipCm: hip circumference in cm (for females only), heightCm: height in cm
+    public double calculateBodyFatPercentage(String sex, double waistCm, double neckCm, double hipCm, double heightCm) {
+        if (waistCm <= 0 || neckCm <= 0 || heightCm <= 0) {
+            throw new IllegalArgumentException("Waist, neck, and height measurements must be positive values.");
+        }
+
+        if (!sex.equalsIgnoreCase("male") && !sex.equalsIgnoreCase("female")) {
+            throw new IllegalArgumentException("Sex must be 'male' or 'female'");
+        }
+
+        double bodyFatPercentage;
+
+        if (sex.equalsIgnoreCase("male")) {
+            // Navy formula for males: 495 / (1.0324 - 0.19077 * log10(waist - neck) + 0.15456 * log10(height)) - 450
+            double logValue = Math.log10(waistCm - neckCm);
+            double logHeight = Math.log10(heightCm);
+            bodyFatPercentage = 495 / (1.0324 - 0.19077 * logValue + 0.15456 * logHeight) - 450;
+        } else {
+            // Navy formula for females: 495 / (1.29579 - 0.35004 * log10(waist + hip - neck) + 0.22100 * log10(height)) - 450
+            if (hipCm <= 0) {
+                throw new IllegalArgumentException("Hip measurement must be positive for females.");
+            }
+            double logValue = Math.log10(waistCm + hipCm - neckCm);
+            double logHeight = Math.log10(heightCm);
+            bodyFatPercentage = 495 / (1.29579 - 0.35004 * logValue + 0.22100 * logHeight) - 450;
+        }
+
+        // Body fat percentage should be between 0 and 50% for reasonable values
+        if (bodyFatPercentage < 0 || bodyFatPercentage > 50) {
+            throw new IllegalArgumentException("Invalid measurements result in unrealistic body fat percentage.");
+        }
+
+        return Math.round(bodyFatPercentage * 100.0) / 100.0; // Round to 2 decimal places
+    }
+
+    // Calculates ideal weight range using Hamwi formula
+    // heightCm: height in centimeters, sex: "male" or "female"
+    // Returns array [minWeight, maxWeight] representing ideal weight range in kg
+    public double[] calculateIdealWeightRange(String sex, double heightCm) {
+        if (heightCm <= 0) {
+            throw new IllegalArgumentException("Height must be a positive value.");
+        }
+
+        if (heightCm < 100 || heightCm > 250) {
+            throw new IllegalArgumentException("Height must be between 100cm and 250cm.");
+        }
+
+        if (!sex.equalsIgnoreCase("male") && !sex.equalsIgnoreCase("female")) {
+            throw new IllegalArgumentException("Sex must be 'male' or 'female'");
+        }
+
+        // Convert height to feet and inches for Hamwi formula
+        double heightInches = heightCm / 2.54;
+        double feet = heightInches / 12;
+        double remainingInches = heightInches % 12;
+
+        double baseWeight;
+        double weightPerInch;
+
+        if (sex.equalsIgnoreCase("male")) {
+            // Male: 106 lbs for first 5 feet, then 6 lbs per additional inch
+            baseWeight = 106;
+            weightPerInch = 6;
+        } else {
+            // Female: 100 lbs for first 5 feet, then 5 lbs per additional inch
+            baseWeight = 100;
+            weightPerInch = 5;
+        }
+
+        double idealWeightLbs;
+        if (feet >= 5) {
+            idealWeightLbs = baseWeight + (weightPerInch * remainingInches) + (weightPerInch * 12 * (feet - 5));
+        } else {
+            // For people shorter than 5 feet, subtract weight proportionally
+            double inchesUnder5Feet = 60 - heightInches;
+            idealWeightLbs = baseWeight - (weightPerInch * inchesUnder5Feet);
+        }
+
+        // Convert to kg and create range (±10%)
+        double idealWeightKg = idealWeightLbs * 0.453592;
+        double minWeight = idealWeightKg * 0.9;
+        double maxWeight = idealWeightKg * 1.1;
+
+        return new double[]{Math.round(minWeight * 100.0) / 100.0, Math.round(maxWeight * 100.0) / 100.0};
+    }
 }
