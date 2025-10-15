@@ -1,0 +1,10 @@
+node_modules
+dist
+target
+.vscode
+.idea
+.git
+.DS_Store
+.Dockerfile*
+Dockerfile*
+.Dockerfile
