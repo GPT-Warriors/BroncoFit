@@ -31,19 +31,14 @@ services:
       - backend
 
   certbot:
-    build:
-      context: ./proxy/certbot
-      dockerfile: Dockerfile
-    image: broncofit-certbot:latest
+    image: certbot/certbot:latest
     volumes:
       - certs:/etc/letsencrypt
       - webroot:/var/www/certbot
-      - ./proxy/godaddy.ini:/secrets/godaddy.ini:ro
-    entrypoint: ""
-    # Use interactive/run commands to issue or renew certificates with the GoDaddy DNS plugin:
-    # Example to request a wildcard and domain cert:
-    # docker-compose run --rm certbot certonly --dns-godaddy --dns-godaddy-credentials /secrets/godaddy.ini \
-    #   -d bronco.fit -d '*.bronco.fit' --email you@example.com --agree-tos --no-eff-email
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    # To manually request certificates, run:
+    # docker-compose run --rm certbot certonly --webroot -w /var/www/certbot \
+    #   -d bronco.fit -d www.bronco.fit --email you@example.com --agree-tos --no-eff-email
 
 volumes:
   certs:
