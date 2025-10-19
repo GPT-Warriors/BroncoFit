@@ -1,0 +1,338 @@
+// Hamburger Menu Component
+.hamburger-menu {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.hamburger-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1002;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.hamburger-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.hamburger-button:active {
+  transform: translateY(0);
+}
+
+.hamburger-button.open {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hamburger-button span {
+  width: 25px;
+  height: 3px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-button.open span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger-button.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-button.open span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Overlay Backdrop */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Side Panel */
+.side-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 85vw;
+  background: white;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.side-panel.open {
+  transform: translateX(0);
+}
+
+/* Side Panel Header */
+.side-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.side-panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Side Panel Content */
+.side-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* User Info Section */
+.user-info {
+  padding: 24px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-info-name {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.user-info-email {
+  font-size: 13px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Guest Welcome */
+.guest-welcome {
+  padding: 30px 20px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.guest-welcome h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.guest-welcome p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Navigation */
+.side-panel-nav {
+  flex: 1;
+  padding: 10px 0;
+}
+
+.menu-item {
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #2c3e50;
+  border-left: 3px solid transparent;
+}
+
+.menu-item:hover {
+  background: #f8f9fa;
+  border-left-color: #667eea;
+}
+
+.menu-item:active {
+  background: #e9ecef;
+}
+
+.menu-item.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin: 10px 15px;
+  border-radius: 8px;
+  border-left: none;
+  font-weight: 600;
+}
+
+.menu-item.primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.menu-item-icon {
+  font-size: 20px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.menu-item-text {
+  font-size: 15px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* Side Panel Footer */
+.side-panel-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 10px 0;
+  margin-top: auto;
+}
+
+.menu-item.logout {
+  color: #dc3545;
+}
+
+.menu-item.logout:hover {
+  background: #fff5f5;
+  border-left-color: #dc3545;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .side-panel {
+    background: #1e1e1e;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .user-info,
+  .guest-welcome,
+  .side-panel-footer {
+    border-color: #333;
+  }
+
+  .user-info-name,
+  .guest-welcome h3 {
+    color: #e0e0e0;
+  }
+
+  .user-info-email,
+  .guest-welcome p {
+    color: #999;
+  }
+
+  .menu-item {
+    color: #e0e0e0;
+  }
+
+  .menu-item:hover {
+    background: #2a2a2a;
+  }
+
+  .menu-item:active {
+    background: #333;
+  }
+
+  .menu-item.logout {
+    color: #ff6b6b;
+  }
+
+  .menu-item.logout:hover {
+    background: #2a1a1a;
+    border-left-color: #ff6b6b;
+  }
+
+  .sidebar-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .side-panel {
+    width: 280px;
+  }
+
+  .hamburger-button {
+    top: 15px;
+    left: 15px;
+  }
+}

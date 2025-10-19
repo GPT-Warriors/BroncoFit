@@ -29,7 +29,9 @@
     "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "recharts": "^2.7.0"
+
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

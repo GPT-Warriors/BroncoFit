@@ -1,5 +1,5 @@
 .App {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
@@ -32,7 +32,7 @@
 
 .welcome-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
+  padding: 3rem 2rem;
   border-radius: 12px;
   color: white;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -46,168 +46,51 @@
 .welcome-section p {
   font-size: 1.1rem;
   line-height: 1.6;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
 }
 
-.goal-section {
-  background: #f8f9fa;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-.goal-section h3 {
-  color: #333;
-  margin-top: 0;
-  font-size: 1.8rem;
-}
-
-.goal-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.goal-form textarea {
-  width: 100%;
-  max-width: 600px;
-  padding: 1rem;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  resize: vertical;
-  transition: border-color 0.3s ease;
-}
-
-.goal-form textarea:focus {
-  outline: none;
-  border-color: #ff6b35;
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
-}
-
-.goal-form button {
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 8px;
+.welcome-section button {
   cursor: pointer;
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.goal-form button:hover:not(:disabled) {
+.welcome-section button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
 }
 
-.goal-form button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.features-preview {
-  text-align: center;
-}
-
-.features-preview h3 {
-  color: #333;
-  font-size: 2rem;
-  margin-bottom: 2rem;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.feature-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border-color: #ff6b35;
-}
-
-.feature-card h4 {
-  color: #333;
-  font-size: 1.3rem;
-  margin: 0 0 1rem 0;
-}
-
-.feature-card p {
-  color: #666;
-  line-height: 1.5;
-  margin: 0;
+.welcome-section button:active {
+  transform: translateY(0);
 }
 
 .app-footer {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid #eee;
+  margin-top: 4rem;
+  padding: 2rem;
   color: #666;
-  font-style: italic;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
 }
 
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
-  .goal-section {
-    background: #2d2d2d;
-    color: white;
-  }
-
-  .goal-section h3 {
-    color: white;
-  }
-
-  .goal-form textarea {
-    background: #1a1a1a;
-    color: white;
-    border-color: #444;
-  }
-
-  .features-preview h3 {
-    color: white;
-  }
-
-  .feature-card {
-    background: #2d2d2d;
-    color: white;
-  }
-
-  .feature-card h4 {
-    color: white;
-  }
-
-  .feature-card p {
-    color: #ccc;
-  }
-
   .app-footer {
     border-top-color: #444;
     color: #ccc;
   }
 }
 
-/* Responsive design */
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  .App {
+    padding: 3rem 4rem;
+  }
+
+  .welcome-section {
+    padding: 4rem 3rem;
+  }
+}
+
+/* Mobile responsive */
 @media (max-width: 768px) {
   .App {
     padding: 1rem;
@@ -217,16 +100,11 @@
     font-size: 2.5rem;
   }
 
-  .welcome-section, .goal-section {
-    padding: 1.5rem;
+  .welcome-section {
+    padding: 2rem 1.5rem;
   }
 
-  .features-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .feature-card {
-    padding: 1.5rem;
+  .welcome-section h2 {
+    font-size: 1.8rem;
   }
 }

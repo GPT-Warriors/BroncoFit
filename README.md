@@ -1,192 +1,184 @@
 # 🏋️‍♂️ BroncoFit
 
-Revolutionary fitness tracking app that combines personalized workout plans with intelligent weight loss coaching. Our AI coach adapts to your progress, lifestyle, and goals to provide real-time guidance and motivation.
+Revolutionary fitness tracking app that combines personalized workout plans with intelligent weight loss coaching. Track your measurements, visualize your progress, and achieve your fitness goals.
 
 ## 🚀 Features
 
-- **AI-Powered Coaching**: Intelligent fitness guidance (future Ollama integration)
-- **Progress Tracking**: Comprehensive data storage (future MongoDB integration)
-- **Custom Workouts**: Adaptive plans that evolve with your progress
-- **RESTful API**: Modern Express.js backend with JSON responses
-- **React Frontend**: Modern React + Vite frontend application
+- **User Authentication**: Secure JWT-based authentication system
+- **Progress Tracking**: Track weight, body fat percentage, and measurements over time
+- **Data Visualization**: Interactive charts showing your fitness journey
+- **Profile Management**: Comprehensive user profiles with fitness goals
+- **Modern UI**: Responsive React frontend with intuitive navigation
+- **RESTful API**: FastAPI backend with automatic API documentation
 
 ## 📋 Prerequisites
 
-- Node.js (version 14 or higher)
+### Frontend
+- Node.js (version 16 or higher)
 - npm (comes with Node.js)
+
+### Backend
+- Python 3.8 or higher
+- pip (Python package manager)
+
+### General
 - Git
 
 ## 🛠️ Quick Setup
 
-### 1. Clone and Navigate
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/GPT-Warriors/BroncoFit.git
 cd BroncoFit
 ```
 
-### 2. Install Dependencies
+### 2. Backend Setup (FastAPI)
+
 ```bash
+# Navigate to the API directory
+cd api
+
+# Create a virtual environment (optional but recommended)
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Create .env file (copy from .env.example if available)
+# Add your configuration:
+# SECRET_KEY=your-secret-key-here
+# DATABASE_URL=your-database-url (if using real database)
+
+# Start the backend server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The backend API will be available at:
+- **API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Alternative Docs**: http://localhost:8000/redoc
+
+### 3. Frontend Setup (React + Vite)
+
+Open a **new terminal window** in the project root directory:
+
+```bash
+# Install frontend dependencies
 npm install
-```
 
-### 3. Start the API Server
-```bash
-npm run server
-```
-
-### 4. Test the API
-Open your browser or use curl to test these endpoints:
-
-- **Hello endpoint**: http://localhost:3001/api/hello
-- **Fitness tip**: http://localhost:3001/api/fitness-tip
-- **Status check**: http://localhost:3001/api/status
-- **Health check**: http://localhost:3001/health
-
-### 5. Test POST Endpoint (Optional)
-```bash
-curl -X POST http://localhost:3001/api/coach \
-  -H "Content-Type: application/json" \
-  -d '{"goal": "Lose 10 pounds"}'
-```
-
-### 6. Start Frontend (Optional)
-In a new terminal window:
-```bash
+# Start the development server
 npm run dev
 ```
-Frontend will be available at http://localhost:3000
 
-### 7. Run Both Together (Optional)
-```bash
-npm run start:all
-```
-
-## 📡 API Endpoints
-
-### GET `/api/hello`
-Returns a welcome message from the BroncoFit API.
-
-**Response:**
-```json
-{
-  "message": "Hello from BroncoFit API!",
-  "service": "AI Fitness Coaching",
-  "status": "active",
-  "timestamp": "2025-09-22T10:30:00.000Z"
-}
-```
-
-### GET `/api/fitness-tip`
-Returns a random fitness tip.
-
-**Response:**
-```json
-{
-  "tip": "Stay hydrated during workouts!",
-  "category": "fitness",
-  "timestamp": "2025-09-22T10:30:00.000Z"
-}
-```
-
-### GET `/api/status`
-Returns the current status of the BroncoFit API service.
-
-**Response:**
-```json
-{
-  "service": "BroncoFit API",
-  "version": "1.0.0",
-  "status": "healthy",
-  "features": ["AI Coaching", "Progress Tracking", "Custom Workouts"],
-  "uptime": 3600,
-  "timestamp": "2025-09-22T10:30:00.000Z"
-}
-```
-
-### POST `/api/coach`
-Submit a fitness goal to the AI coach (placeholder for future Ollama integration).
-
-**Request Body:**
-```json
-{
-  "goal": "Lose 10 pounds in 3 months"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Thanks for sharing your goal: \"Lose 10 pounds in 3 months\"",
-  "response": "Your AI coach will analyze this goal and create a personalized plan soon!",
-  "nextSteps": ["Connect to MongoDB for data storage", "Integrate Ollama AI service"],
-  "timestamp": "2025-09-22T10:30:00.000Z"
-}
-```
-
-### GET `/health`
-Simple health check endpoint.
-
-**Response:**
-```json
-{
-  "status": "OK",
-  "service": "BroncoFit API"
-}
-```
+The frontend will be available at: http://localhost:5173
 
 ## 🏗️ Project Structure
 
 ```
 BroncoFit/
-├── public/           # Static assets
-├── src/              # React frontend source
-│   ├── App.jsx       # Main React component
-│   ├── App.css       # Styling
-│   ├── main.jsx      # React entry point
-│   └── index.css     # Global styles
-├── server.js         # Express.js API server
-├── package.json      # Dependencies and scripts
-├── vite.config.js    # Vite configuration
-└── README.md         # This file
+├── api/                      # FastAPI backend
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py          # FastAPI application entry point
+│   │   ├── models.py        # Database models
+│   │   ├── auth.py          # Authentication logic
+│   │   ├── database.py      # Database connection
+│   │   ├── config.py        # Configuration settings
+│   │   └── routers/         # API route handlers
+│   │       ├── auth.py      # Authentication endpoints
+│   │       ├── profile.py   # User profile endpoints
+│   │       ├── measurements.py  # Measurements endpoints
+│   │       └── calculations.py  # Body metrics calculations
+│   ├── requirements.txt     # Python dependencies
+│   └── README.md
+├── src/                     # React frontend
+│   ├── components/
+│   │   ├── LoginPage.jsx    # Login component
+│   │   ├── SignupPage.jsx   # Registration component
+│   │   ├── ProfilePage.jsx  # User profile & dashboard
+│   │   └── HamburgerMenu.jsx # Navigation menu
+│   ├── services/
+│   │   └── api.js           # API service layer
+│   ├── App.jsx              # Main React component
+│   └── main.jsx             # React entry point
+├── public/                  # Static assets
+├── index.html
+├── package.json             # Frontend dependencies
+├── vite.config.js           # Vite configuration
+└── README.md                # This file
 ```
 
 ## 📦 Available Scripts
 
+### Frontend
 - `npm run dev` - Start the React development server
 - `npm run build` - Build the React app for production
 - `npm run preview` - Preview the production build
-- `npm run server` - Start the Express API server
-- `npm run server:dev` - Start the API server with auto-restart
-- `npm run start:all` - Run both frontend and backend together
 - `npm run lint` - Run ESLint on the source code
 
-## 🔧 Expected Output
+### Backend
+- `uvicorn app.main:app --reload` - Start FastAPI with auto-reload
+- `uvicorn app.main:app --host 0.0.0.0 --port 8000` - Start with custom host/port
 
-When the server starts, you should see:
-```
-🏋️‍♂️ BroncoFit API server running on http://localhost:3001
-📱 Test endpoints:
-   GET  http://localhost:3001/api/hello
-   GET  http://localhost:3001/api/fitness-tip
-   GET  http://localhost:3001/api/status
-   POST http://localhost:3001/api/coach
-```
+## 🔌 API Endpoints
+
+The backend provides the following main endpoint groups:
+
+- **Authentication** (`/auth`)
+  - POST `/auth/register` - Create new user account
+  - POST `/auth/login` - User login
+  - GET `/auth/me` - Get current user info
+
+- **Profile** (`/profile`)
+  - GET `/profile` - Get user profile
+  - PUT `/profile` - Update user profile
+  - POST `/profile/initialize` - Create initial profile with stats
+
+- **Measurements** (`/measurements`)
+  - GET `/measurements` - Get all measurements
+  - POST `/measurements` - Add new measurement
+  - GET `/measurements/latest` - Get most recent measurement
+
+- **Calculations** (`/calculations`)
+  - POST `/calculations/bmi` - Calculate BMI
+  - POST `/calculations/bmr` - Calculate BMR
+  - POST `/calculations/tdee` - Calculate TDEE
+
+Visit http://localhost:8000/docs for interactive API documentation.
 
 ## 🚨 Troubleshooting
 
-- **Port 3001 is busy**: The server will automatically use the next available port
-- **Permission errors**: Try running `npm install` again or use `sudo` if necessary
-- **Node.js version**: Make sure you have Node.js version 14 or higher installed
-- **403 Forbidden on port 5000**: This was resolved by changing to port 3001 to avoid macOS AirTunes conflicts
+### Frontend Issues
+- **Port 5173 is busy**: Vite will automatically suggest the next available port
+- **Module not found errors**: Run `npm install` to ensure all dependencies are installed
+- **Build errors**: Clear node_modules and reinstall: `rm -rf node_modules package-lock.json && npm install`
 
-## 🔮 Future Integrations
+### Backend Issues
+- **Port 8000 is busy**: Change the port using `--port` flag (e.g., `--port 8001`)
+- **Module import errors**: Ensure virtual environment is activated and dependencies are installed
+- **Database connection errors**: Check your `.env` file configuration
+- **CORS errors**: Backend is configured to allow localhost:5173, adjust in `app/main.py` if needed
 
-This project is designed to integrate with:
+### General Tips
+- Make sure both frontend and backend are running simultaneously
+- Check that the API URL in `src/services/api.js` matches your backend URL
+- Clear browser cache if seeing stale data
+- Check browser console and terminal for error messages
 
-- **MongoDB**: For user data storage and progress tracking
-- **Ollama**: For local AI coaching and workout plan generation
-- **Authentication**: User registration and login system
-- **Real-time Features**: WebSocket integration for live coaching
+## 🔮 Future Enhancements
+
+- **AI-Powered Coaching**: Integration with AI models for personalized fitness advice
+- **MongoDB Integration**: Production-ready database for user data
+- **Social Features**: Share progress with friends and fitness community
+- **Workout Plans**: Custom workout routines based on goals
+- **Nutrition Tracking**: Meal planning and calorie tracking
+- **Mobile App**: Native iOS and Android applications
 
 ## 🤝 Contributing
 
