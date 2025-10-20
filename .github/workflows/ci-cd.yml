@@ -97,95 +97,53 @@ jobs:
             dist/
             api/
 
-  # ==================== EC2 Deployment (Disabled - Configure Later) ====================
-  # Uncomment and configure the deploy job below when ready to deploy to EC2
-  #
-  # Required GitHub Secrets:
-  #   - EC2_HOST: Your EC2 IP address (e.g., 54.123.45.67)
-  #   - EC2_USER: SSH username (e.g., ubuntu or ec2-user)
-  #   - EC2_SSH_KEY: Private SSH key (entire contents of .pem file)
-  #   - REMOTE_DIR: Deployment directory on EC2 (e.g., /home/ubuntu/broncofit)
-  #   - EC2_SSH_PORT: SSH port (optional, defaults to 22)
-  #
-  # deploy:
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  #
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '18.x'
-  #         cache: 'npm'
-  #
-  #     - name: Install and build frontend
-  #       run: |
-  #         npm ci
-  #         npm run build
-  #
-  #     - name: Prepare SSH key
-  #       run: |
-  #         echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-  #         chmod 600 key.pem
-  #
-  #     - name: Sync backend to EC2
-  #       run: |
-  #         rsync -avz --delete \
-  #           -e "ssh -i key.pem -o StrictHostKeyChecking=no -p ${{ secrets.EC2_SSH_PORT || '22' }}" \
-  #           --exclude 'venv' \
-  #           --exclude '__pycache__' \
-  #           --exclude '.pytest_cache' \
-  #           --exclude 'tests' \
-  #           --exclude '.env' \
-  #           ./api/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.REMOTE_DIR }}/api/
-  #
-  #     - name: Sync frontend build to EC2
-  #       run: |
-  #         rsync -avz --delete \
-  #           -e "ssh -i key.pem -o StrictHostKeyChecking=no -p ${{ secrets.EC2_SSH_PORT || '22' }}" \
-  #           ./dist/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.REMOTE_DIR }}/frontend/dist/
-  #
-  #     - name: Deploy on EC2
-  #       run: |
-  #         ssh -i key.pem -o StrictHostKeyChecking=no -p ${{ secrets.EC2_SSH_PORT || '22' }} \
-  #           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-  #           set -e
-  #           cd ${{ secrets.REMOTE_DIR }}
-  #
-  #           # Backend: create/activate venv, install deps
-  #           if [ -d api ]; then
-  #             python3 -m venv api/venv || true
-  #             . api/venv/bin/activate
-  #             pip install --upgrade pip
-  #             if [ -f api/requirements.txt ]; then pip install -r api/requirements.txt; fi
-  #           fi
-  #
-  #           # Optional: Run database migrations
-  #           # cd api && alembic upgrade head || true
-  #
-  #           # Restart services (replace with your service names)
-  #           sudo systemctl restart broncofit-api || true
-  #           sudo systemctl restart nginx || true
-  #
-  #           echo "Deployment completed successfully!"
-  #         EOF
-  #       env:
-  #         REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
-  #
-  #     - name: Cleanup SSH key
-  #       if: always()
-  #       run: |
-  #         shred -u key.pem || rm -f key.pem
-  #
-  #     - name: Deployment status notification
-  #       if: always()
-  #       run: |
-  #         if [ ${{ job.status }} == 'success' ]; then
-  #           echo "✅ Deployment successful!"
-  #         else
-  #           echo "❌ Deployment failed!"
-  #         fi
+      # ==================== EC2 Deployment ====================
+      deploy:
+        needs: test
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+        steps:
+          - name: Download build artifacts
+            uses: actions/download-artifact@v4
+            with:
+              name: broncofit-build
+
+          - name: Deploy to EC2
+            uses: appleboy/ssh-action@v1.0.3
+            with:
+              host: ${{ secrets.EC2_HOST }}
+              username: ${{ secrets.EC2_USER }}
+              key: ${{ secrets.EC2_SSH_KEY }}
+              port: 22
+              script: |
+                set -e
+                REMOTE_DIR="/var/www/broncofit"
+
+                # Stop the app to prevent issues during sync
+                pm2 stop broncofit-api || true
+
+                # Sync the backend files
+                rsync -avz --delete \
+                  --exclude 'venv' \
+                  --exclude '__pycache__' \
+                  --exclude '.pytest_cache' \
+                  --exclude 'tests' \
+                  --exclude '.env' \
+                  ./api/ $REMOTE_DIR/api/
+
+                # Sync the frontend build files
+                rsync -avz --delete ./dist/ $REMOTE_DIR/dist/
+
+                # Go to the backend directory
+                cd $REMOTE_DIR/api
+
+                # Activate virtual environment and install dependencies
+                source venv/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+
+                # Restart the application with PM2 for a zero-downtime reload
+                pm2 restart broncofit-api
+
+                echo "✅ Deployment successful!"
