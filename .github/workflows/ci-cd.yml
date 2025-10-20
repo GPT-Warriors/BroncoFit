@@ -1,0 +1,172 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.11']
+        node-version: ['18.x']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ==================== Backend Tests ====================
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install backend dependencies
+        working-directory: ./api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run backend tests (pytest)
+        working-directory: ./api
+        run: |
+          pytest tests/ -v --tb=short
+        env:
+          MONGODB_URI: mongodb://localhost:27017
+          DATABASE_NAME: broncofit_test
+          JWT_SECRET_KEY: test-secret-key-for-ci
+          JWT_ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+
+      # ==================== Frontend Tests ====================
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run frontend tests (Vitest)
+        run: npm test
+        env:
+          VITE_API_URL: http://localhost:8000
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            api/pytest-report.xml
+            coverage/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            api/
+
+  # ==================== EC2 Deployment (Disabled - Configure Later) ====================
+  # Uncomment and configure the deploy job below when ready to deploy to EC2
+  #
+  # Required GitHub Secrets:
+  #   - EC2_HOST: Your EC2 IP address (e.g., 54.123.45.67)
+  #   - EC2_USER: SSH username (e.g., ubuntu or ec2-user)
+  #   - EC2_SSH_KEY: Private SSH key (entire contents of .pem file)
+  #   - REMOTE_DIR: Deployment directory on EC2 (e.g., /home/ubuntu/broncofit)
+  #   - EC2_SSH_PORT: SSH port (optional, defaults to 22)
+  #
+  # deploy:
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Set up Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '18.x'
+  #         cache: 'npm'
+  #
+  #     - name: Install and build frontend
+  #       run: |
+  #         npm ci
+  #         npm run build
+  #
+  #     - name: Prepare SSH key
+  #       run: |
+  #         echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+  #         chmod 600 key.pem
+  #
+  #     - name: Sync backend to EC2
+  #       run: |
+  #         rsync -avz --delete \
+  #           -e "ssh -i key.pem -o StrictHostKeyChecking=no -p ${{ secrets.EC2_SSH_PORT || '22' }}" \
+  #           --exclude 'venv' \
+  #           --exclude '__pycache__' \
+  #           --exclude '.pytest_cache' \
+  #           --exclude 'tests' \
+  #           --exclude '.env' \
+  #           ./api/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.REMOTE_DIR }}/api/
+  #
+  #     - name: Sync frontend build to EC2
+  #       run: |
+  #         rsync -avz --delete \
+  #           -e "ssh -i key.pem -o StrictHostKeyChecking=no -p ${{ secrets.EC2_SSH_PORT || '22' }}" \
+  #           ./dist/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.REMOTE_DIR }}/frontend/dist/
+  #
+  #     - name: Deploy on EC2
+  #       run: |
+  #         ssh -i key.pem -o StrictHostKeyChecking=no -p ${{ secrets.EC2_SSH_PORT || '22' }} \
+  #           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+  #           set -e
+  #           cd ${{ secrets.REMOTE_DIR }}
+  #
+  #           # Backend: create/activate venv, install deps
+  #           if [ -d api ]; then
+  #             python3 -m venv api/venv || true
+  #             . api/venv/bin/activate
+  #             pip install --upgrade pip
+  #             if [ -f api/requirements.txt ]; then pip install -r api/requirements.txt; fi
+  #           fi
+  #
+  #           # Optional: Run database migrations
+  #           # cd api && alembic upgrade head || true
+  #
+  #           # Restart services (replace with your service names)
+  #           sudo systemctl restart broncofit-api || true
+  #           sudo systemctl restart nginx || true
+  #
+  #           echo "Deployment completed successfully!"
+  #         EOF
+  #       env:
+  #         REMOTE_DIR: ${{ secrets.REMOTE_DIR }}
+  #
+  #     - name: Cleanup SSH key
+  #       if: always()
+  #       run: |
+  #         shred -u key.pem || rm -f key.pem
+  #
+  #     - name: Deployment status notification
+  #       if: always()
+  #       run: |
+  #         if [ ${{ job.status }} == 'success' ]; then
+  #           echo "✅ Deployment successful!"
+  #         else
+  #           echo "❌ Deployment failed!"
+  #         fi
