@@ -10,10 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "server": "node server.js",
-    "server:dev": "nodemon server.js",
-    "start:all": "concurrently \"npm run server:dev\" \"npm run dev\""
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0"
   },
   "repository": {
     "type": "git",
