@@ -109,24 +109,17 @@ jobs:
         with:
           name: build-artifacts
 
-      - name: Copy files to EC2 via rsync
-        uses: easingthemes/rsync-action@v1
+      - name: Deploy files to EC2 via rsync
+        uses: easingthemes/ssh-deploy@v5
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          # Exclude files from the transfer
-          options: |
-            --exclude '.env'
-            --exclude '__pycache__'
-            --exclude 'venv'
-            --exclude 'tests'
-          source: |
-            api/
-            dist/
-          target: /var/www/broncofit/
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.EC2_HOST }}
+          REMOTE_USER: ${{ secrets.EC2_USER }}
+          SOURCE: "./"
+          TARGET: "/var/www/broncofit"
+          EXCLUDE: "/tests/, /.env, /venv/, /__pycache__/, /.pytest_cache/"
 
-      - name: Run commands on EC2
+      - name: Run remote commands on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
