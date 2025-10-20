@@ -1,3 +1,6 @@
+[![CI/CD Pipeline](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml)
+![GitHub License](https://img.shields.io/github/license/GPT-Warriors/BroncoFit)
+
 # 🏋️‍♂️ BroncoFit
 
 Revolutionary fitness tracking app that combines personalized workout plans with intelligent weight loss coaching. Track your measurements, visualize your progress, and achieve your fitness goals.
@@ -10,6 +13,12 @@ Revolutionary fitness tracking app that combines personalized workout plans with
 - **Profile Management**: Comprehensive user profiles with fitness goals
 - **Modern UI**: Responsive React frontend with intuitive navigation
 - **RESTful API**: FastAPI backend with automatic API documentation
+
+## Built With
+![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.99.1-green?logo=fastapi)
+![React](https://img.shields.io/badge/React-18-blue?logo=react)
+![Nginx](https://img.shields.io/badge/Nginx-gray?logo=nginx)
 
 ## 📋 Prerequisites
 
@@ -187,10 +196,6 @@ Visit http://localhost:8000/docs for interactive API documentation.
 3. Commit your changes: `git commit -m 'Add feature'`
 4. Push to the branch: `git push origin feature-name`
 5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the ISC License.
 
 ## 👥 Team
 
