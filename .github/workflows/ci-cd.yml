@@ -97,7 +97,7 @@ jobs:
             dist/
             api/
 
-  # ==================== EC2 Deployment ====================
+# ==================== EC2 Deployment ====================
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -109,43 +109,39 @@ jobs:
         with:
           name: build-artifacts
 
-      - name: Deploy to EC2
+      - name: Copy files to EC2 via rsync
+        uses: easingthemes/rsync-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Exclude files from the transfer
+          options: |
+            --exclude '.env'
+            --exclude '__pycache__'
+            --exclude 'venv'
+            --exclude 'tests'
+          source: |
+            api/
+            dist/
+          target: /var/www/broncofit/
+
+      - name: Run commands on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
           script: |
             set -e
-            REMOTE_DIR="/var/www/broncofit"
-
-            # Stop the app to prevent issues during sync
-            pm2 stop broncofit-api || true
-
-            # Sync the backend files
-            rsync -avz --delete \
-              --exclude 'venv' \
-              --exclude '__pycache__' \
-              --exclude '.pytest_cache' \
-              --exclude 'tests' \
-              --exclude '.env' \
-              ./api/ $REMOTE_DIR/api/
-
-            # Sync the frontend build files (directly to the root, not dist/)
-            rsync -avz --delete \
-              --exclude 'api' \
-              ./dist/ $REMOTE_DIR/
-
-            # Go to the backend directory
-            cd $REMOTE_DIR/api
-
+            cd /var/www/broncofit/api
+            
             # Activate virtual environment and install dependencies
             source venv/bin/activate
             pip install --upgrade pip
             pip install -r requirements.txt
-
-            # Restart the application with PM2 for a zero-downtime reload
+            
+            # Restart the application with PM2
             pm2 restart broncofit-api
-
+            
             echo "✅ Deployment successful!"
