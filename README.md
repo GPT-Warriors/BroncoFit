@@ -1,5 +1,6 @@
 [![CI/CD Pipeline](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml)
 ![GitHub License](https://img.shields.io/github/license/GPT-Warriors/BroncoFit)
+[![codecov](https://codecov.io/gh/GPT-Warriors/BroncoFit/branch/main/graph/badge.svg?token=EQR0FSM927)](https://codecov.io/gh/GPT-Warriors/BroncoFit)
 
 # 🏋️‍♂️ BroncoFit
 
