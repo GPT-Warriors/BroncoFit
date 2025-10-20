@@ -31,10 +31,10 @@ async def shutdown_db_client():
 
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(profile.router)
-app.include_router(calculations.router)
-app.include_router(measurements.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(profile.router, prefix="/api")
+app.include_router(calculations.router, prefix="/api")
+app.include_router(measurements.router, prefix="/api")
 
 
 # Health check endpoint
