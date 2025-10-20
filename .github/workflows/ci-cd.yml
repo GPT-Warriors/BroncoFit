@@ -35,13 +35,22 @@ jobs:
       - name: Run backend tests (pytest)
         working-directory: ./api
         run: |
-          pytest tests/ -v --tb=short
+          pytest tests/ -v --tb=short --cov=app --cov-report=xml --cov-report=html --cov-report=term
         env:
           MONGODB_URI: mongodb://localhost:27017
           DATABASE_NAME: broncofit_test
           JWT_SECRET_KEY: test-secret-key-for-ci
           JWT_ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+
+      - name: Upload backend coverage to CodeCov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./api/coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
 
       # ==================== Frontend Tests ====================
       - name: Set up Node.js ${{ matrix.node-version }}
@@ -54,9 +63,18 @@ jobs:
         run: npm ci
 
       - name: Run frontend tests (Vitest)
-        run: npm test
+        run: npm test -- --coverage
         env:
           VITE_API_URL: http://localhost:8000
+
+      - name: Upload frontend coverage to CodeCov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
 
       - name: Build frontend
         run: npm run build
@@ -67,7 +85,8 @@ jobs:
         with:
           name: test-results
           path: |
-            api/pytest-report.xml
+            api/coverage.xml
+            api/htmlcov/
             coverage/
 
       - name: Upload build artifacts
