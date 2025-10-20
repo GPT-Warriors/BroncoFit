@@ -97,53 +97,55 @@ jobs:
             dist/
             api/
 
-      # ==================== EC2 Deployment ====================
-      deploy:
-        needs: test
-        runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  # ==================== EC2 Deployment ====================
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
-        steps:
-          - name: Download build artifacts
-            uses: actions/download-artifact@v4
-            with:
-              name: broncofit-build
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
 
-          - name: Deploy to EC2
-            uses: appleboy/ssh-action@v1.0.3
-            with:
-              host: ${{ secrets.EC2_HOST }}
-              username: ${{ secrets.EC2_USER }}
-              key: ${{ secrets.EC2_SSH_KEY }}
-              port: 22
-              script: |
-                set -e
-                REMOTE_DIR="/var/www/broncofit"
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            REMOTE_DIR="/var/www/broncofit"
 
-                # Stop the app to prevent issues during sync
-                pm2 stop broncofit-api || true
+            # Stop the app to prevent issues during sync
+            pm2 stop broncofit-api || true
 
-                # Sync the backend files
-                rsync -avz --delete \
-                  --exclude 'venv' \
-                  --exclude '__pycache__' \
-                  --exclude '.pytest_cache' \
-                  --exclude 'tests' \
-                  --exclude '.env' \
-                  ./api/ $REMOTE_DIR/api/
+            # Sync the backend files
+            rsync -avz --delete \
+              --exclude 'venv' \
+              --exclude '__pycache__' \
+              --exclude '.pytest_cache' \
+              --exclude 'tests' \
+              --exclude '.env' \
+              ./api/ $REMOTE_DIR/api/
 
-                # Sync the frontend build files
-                rsync -avz --delete ./dist/ $REMOTE_DIR/dist/
+            # Sync the frontend build files (directly to the root, not dist/)
+            rsync -avz --delete \
+              --exclude 'api' \
+              ./dist/ $REMOTE_DIR/
 
-                # Go to the backend directory
-                cd $REMOTE_DIR/api
+            # Go to the backend directory
+            cd $REMOTE_DIR/api
 
-                # Activate virtual environment and install dependencies
-                source venv/bin/activate
-                pip install --upgrade pip
-                pip install -r requirements.txt
+            # Activate virtual environment and install dependencies
+            source venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt
 
-                # Restart the application with PM2 for a zero-downtime reload
-                pm2 restart broncofit-api
+            # Restart the application with PM2 for a zero-downtime reload
+            pm2 restart broncofit-api
 
-                echo "✅ Deployment successful!"
+            echo "✅ Deployment successful!"
