@@ -1,3 +1,4 @@
+[![CI/CD Pipeline](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml)
 # 🏋️‍♂️ BroncoFit
 
 Revolutionary fitness tracking app that combines personalized workout plans with intelligent weight loss coaching. Track your measurements, visualize your progress, and achieve your fitness goals.
