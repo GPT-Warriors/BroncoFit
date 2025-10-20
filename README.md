@@ -14,6 +14,12 @@ Revolutionary fitness tracking app that combines personalized workout plans with
 - **Modern UI**: Responsive React frontend with intuitive navigation
 - **RESTful API**: FastAPI backend with automatic API documentation
 
+## Built With
+![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.99.1-green?logo=fastapi)
+![React](https://img.shields.io/badge/React-18-blue?logo=react)
+![Nginx](https://img.shields.io/badge/Nginx-gray?logo=nginx)
+
 ## 📋 Prerequisites
 
 ### Frontend
