@@ -6,7 +6,7 @@
  * import apiService from './services/mockApi'
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = '/api';
 
 class ApiService {
   constructor() {
@@ -61,7 +61,7 @@ class ApiService {
 
   // ==================== Authentication ====================
   async register(userData) {
-    const response = await this.request('/api/auth/register', {
+    const response = await this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
       includeAuth: false,
@@ -74,7 +74,7 @@ class ApiService {
     formData.append('username', email); // OAuth2 spec uses 'username'
     formData.append('password', password);
 
-    const response = await fetch(`${this.baseURL}/api/auth/login`, {
+    const response = await fetch(`${this.baseURL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -99,37 +99,37 @@ class ApiService {
   }
 
   async getCurrentUser() {
-    return await this.request('/api/auth/me');
+    return await this.request('/auth/me');
   }
 
   // ==================== Profile ====================
   async getProfile() {
-    return await this.request('/api/profile');
+    return await this.request('/profile');
   }
 
   async createProfile(profileData) {
-    return await this.request('/api/profile', {
+    return await this.request('/profile', {
       method: 'POST',
       body: JSON.stringify(profileData),
     });
   }
 
   async updateProfile(profileData) {
-    return await this.request('/api/profile', {
+    return await this.request('/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });
   }
 
   async deleteProfile() {
-    return await this.request('/api/profile', {
+    return await this.request('/profile', {
       method: 'DELETE',
     });
   }
 
   // ==================== Calculations ====================
   async calculateTDEE(data) {
-    return await this.request('/api/calculations/tdee', {
+    return await this.request('/calculations/tdee', {
       method: 'POST',
       body: JSON.stringify(data),
       includeAuth: false, // TDEE calculation doesn't require auth
@@ -137,7 +137,7 @@ class ApiService {
   }
 
   async calculateBMI(heightCm, weightKg) {
-    return await this.request('/api/calculations/bmi', {
+    return await this.request('/calculations/bmi', {
       method: 'POST',
       body: JSON.stringify({ height_cm: heightCm, weight_kg: weightKg }),
       includeAuth: false,
@@ -146,31 +146,31 @@ class ApiService {
 
   // ==================== Measurements ====================
   async getMeasurements(limit = 30, skip = 0) {
-    return await this.request(`/api/measurements?limit=${limit}&skip=${skip}`);
+    return await this.request(`/measurements?limit=${limit}&skip=${skip}`);
   }
 
   async addMeasurement(measurementData) {
-    return await this.request('/api/measurements', {
+    return await this.request('/measurements', {
       method: 'POST',
       body: JSON.stringify(measurementData),
     });
   }
 
   async updateMeasurement(measurementId, measurementData) {
-    return await this.request(`/api/measurements/${measurementId}`, {
+    return await this.request(`/measurements/${measurementId}`, {
       method: 'PUT',
       body: JSON.stringify(measurementData),
     });
   }
 
   async deleteMeasurement(measurementId) {
-    return await this.request(`/api/measurements/${measurementId}`, {
+    return await this.request(`/measurements/${measurementId}`, {
       method: 'DELETE',
     });
   }
 
   async getLatestMeasurement() {
-    return await this.request('/api/measurements/latest');
+    return await this.request('/measurements/latest');
   }
 
   // ==================== Helper Methods ====================
