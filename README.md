@@ -190,10 +190,6 @@ Visit http://localhost:8000/docs for interactive API documentation.
 4. Push to the branch: `git push origin feature-name`
 5. Submit a pull request
 
-## 📄 License
-
-This project is licensed under the ISC License.
-
 ## 👥 Team
 
 **GPT-Warriors** - CS 4800 Class Project
