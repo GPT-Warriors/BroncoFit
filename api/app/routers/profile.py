@@ -5,7 +5,7 @@ from app.database import get_database
 from bson import ObjectId
 from datetime import datetime
 
-router = APIRouter(prefix="/api/profile", tags=["Profile"])
+router = APIRouter(prefix="/profile", tags=["Profile"])
 
 
 @router.get("", response_model=ProfileOut)
@@ -110,4 +110,3 @@ async def delete_profile(current_user = Depends(get_current_user)):
         )
 
     return None
-

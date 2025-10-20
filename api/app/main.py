@@ -30,7 +30,7 @@ async def shutdown_db_client():
     await close_mongo_connection()
 
 
-# Include routers
+# Include routers with /api prefix
 app.include_router(auth.router, prefix="/api")
 app.include_router(profile.router, prefix="/api")
 app.include_router(calculations.router, prefix="/api")
@@ -50,4 +50,3 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
-

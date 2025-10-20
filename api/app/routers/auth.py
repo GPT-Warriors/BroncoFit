@@ -7,7 +7,7 @@ from app.dependencies import get_current_user
 from bson import ObjectId
 from datetime import datetime
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)

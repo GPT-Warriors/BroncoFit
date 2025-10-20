@@ -7,7 +7,7 @@ from bson import ObjectId
 from datetime import datetime
 from typing import List, Optional
 
-router = APIRouter(prefix="/api/calculations", tags=["Calculations"])
+router = APIRouter(prefix="/calculations", tags=["Calculations"])
 
 
 @router.post("/tdee", response_model=TDEEResponse)
@@ -82,4 +82,3 @@ async def calculate_tdee_from_profile(current_user = Depends(get_current_user)):
     )
 
     return TDEEResponse(**result)
-

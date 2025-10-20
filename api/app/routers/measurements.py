@@ -6,7 +6,7 @@ from bson import ObjectId
 from datetime import datetime
 from typing import List, Optional
 
-router = APIRouter(prefix="/api/measurements", tags=["Measurements"])
+router = APIRouter(prefix="/measurements", tags=["Measurements"])
 
 
 @router.post("", response_model=MeasurementOut, status_code=status.HTTP_201_CREATED)
@@ -109,4 +109,3 @@ async def delete_measurement(measurement_id: str, current_user = Depends(get_cur
         )
 
     return None
-
