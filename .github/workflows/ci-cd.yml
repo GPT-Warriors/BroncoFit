@@ -110,7 +110,7 @@ jobs:
           name: build-artifacts
 
       - name: Deploy files to EC2 via rsync
-        uses: easingthemes/ssh-deploy@v5
+        uses: easingthemes/ssh-deploy@v4.1.10
         with:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.EC2_HOST }}
