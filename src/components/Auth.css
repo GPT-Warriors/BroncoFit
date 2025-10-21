@@ -1,12 +1,14 @@
-// Auth Pages Styles
+/* Auth Pages Styles */
 .auth-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: fixed;         
+  inset: 0;                
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  position: relative;
+  padding: 2rem;            
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: auto;          
 }
 
 .back-button {
