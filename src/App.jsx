@@ -6,6 +6,45 @@ import LoginPage from './components/LoginPage'
 import ProfilePage from './components/ProfilePage'
 import apiService from './services/api'
 
+
+/*http://localhost:3000/?debug=profile */
+/*Added mock data below and usestate to access debug for profile, use the above url to access*/ 
+/*Theres also a usestate for this in profilepage.jsx */
+
+// 🧪 DESIGN PREVIEW DATA
+const MOCK_USER = {
+  id: '123',
+  email: 'test@example.com',
+  name: 'Test User',
+};
+
+const MOCK_PROFILE = {
+  user_id: '123',
+  age: 25,
+  sex: 'male',
+  height_cm: 180,
+  current_weight_kg: 80,
+  target_weight_kg: 75,
+  activity_level: 'moderate',
+  fitness_goal: 'lose_weight',
+  updated_at: new Date().toISOString(),
+};
+
+const MOCK_MEASUREMENTS = [
+  {
+    id: '1',
+    weight_kg: 80,
+    measurement_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    notes: 'Starting weight',
+  },
+  {
+    id: '2',
+    weight_kg: 79.5,
+    measurement_date: new Date().toISOString(),
+    notes: 'Week 1',
+  },
+];
+
 function App() {
   const [currentPage, setCurrentPage] = useState('home') // home, signup, login, profile, dashboard, settings
   const [user, setUser] = useState(null)
@@ -27,6 +66,26 @@ function App() {
     }
     checkAuth()
   }, [])
+  useEffect(() => {
+  if (import.meta.env.DEV) {
+    const params = new URLSearchParams(window.location.search);
+    const debugPage = params.get("debug");
+
+    if (debugPage === "profile") {
+      console.log("🧪 Debugging ProfilePage with mock data");
+
+      // Jump straight to ProfilePage
+      setCurrentPage("profile");
+
+      // Fake logged-in user
+      setUser(MOCK_USER);
+
+      // Store mocks in localStorage so ProfilePage can read them
+      localStorage.setItem("mock_profile", JSON.stringify(MOCK_PROFILE));
+      localStorage.setItem("mock_measurements", JSON.stringify(MOCK_MEASUREMENTS));
+    }
+  }
+}, []);
 
   const handleNavigation = (page) => {
     setCurrentPage(page)

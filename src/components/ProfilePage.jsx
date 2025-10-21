@@ -16,6 +16,18 @@ function ProfilePage({ user, onBack }) {
   const [addingMeasurement, setAddingMeasurement] = useState(false);
   const [measurementError, setMeasurementError] = useState('');
 
+// 🧪 If mock data exists, use it for design preview
+useEffect(() => {
+  const mockProfile = localStorage.getItem("mock_profile");
+  const mockMeasurements = localStorage.getItem("mock_measurements");
+
+  if (mockProfile && mockMeasurements) {
+    setProfile(JSON.parse(mockProfile));
+    setMeasurements(JSON.parse(mockMeasurements));
+    setLoading(false);
+  }
+}, []);
+
   // Conversion functions
   const kgToLbs = (kg) => kg * 2.20462;
   const lbsToKg = (lbs) => lbs * 0.453592;

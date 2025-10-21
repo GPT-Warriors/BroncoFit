@@ -1,10 +1,16 @@
-// Profile Page Styles
+/* Replace your .profile-container with this */
 .profile-container {
-  min-height: 100vh;
+  position: fixed;          /* ignore parent constraints */
+  inset: 0;                 /* full viewport (no 100vw/100vh scroll issues) */
+  display: flex;            /* center the content block */
+  justify-content: center;  /* horizontal center */
+  align-items: flex-start;  /* start near top (change to center if you want) */
+  padding: 5rem 2rem 3rem;  /* room for the top back button/header */
+  box-sizing: border-box;
   background: #f5f7fa;
-  padding: 2rem;
-  padding-top: 4rem;
+  overflow: auto;           /* scrolls if content is tall */
 }
+
 
 .profile-content {
   max-width: 1400px;
@@ -206,8 +212,31 @@
 }
 
 .back-button {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
   cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 }
+
+.back-button:hover {
+  background: linear-gradient(135deg, #5a6ce6 0%, #6a3fb1 100%);
+  transform: translateY(-2px);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
 
 /* Add Measurement Button */
 .add-measurement-btn {
