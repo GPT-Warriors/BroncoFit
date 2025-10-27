@@ -243,6 +243,9 @@ useEffect(() => {
                 <label className="form-label">Current Weight (lbs)</label>
                 <input
                   type="number"
+                  /*avoid negative input and a max input of 999*/
+                  min={0}
+                  max={999}
                   className="form-input"
                   placeholder="Enter your current weight"
                   value={newMeasurement.weight_lbs}
