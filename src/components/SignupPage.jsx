@@ -3,7 +3,7 @@ import apiService from '../services/api';
 import './Auth.css';
 
 function SignupPage({ onSuccess, onBack }) {
-  const [step, setStep] = useState(1); // 1: Account Info, 2: Profile Stats
+  const [step, setStep] = useState(1); 
   const [formData, setFormData] = useState({
     // Account info
     name: '',

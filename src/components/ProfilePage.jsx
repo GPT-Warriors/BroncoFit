@@ -15,18 +15,23 @@ function ProfilePage({ user, onBack }) {
   });
   const [addingMeasurement, setAddingMeasurement] = useState(false);
   const [measurementError, setMeasurementError] = useState('');
+  const [tdeeData, setTdeeData] = useState(null);
+  const [tdeeError, setTdeeError] = useState('');
 
 // 🧪 If mock data exists, use it for design preview
 useEffect(() => {
   const mockProfile = localStorage.getItem("mock_profile");
   const mockMeasurements = localStorage.getItem("mock_measurements");
+  const mockTdee = localStorage.getItem("mock_tdee");          
 
   if (mockProfile && mockMeasurements) {
     setProfile(JSON.parse(mockProfile));
     setMeasurements(JSON.parse(mockMeasurements));
+    if (mockTdee) setTdeeData(JSON.parse(mockTdee));            
     setLoading(false);
   }
 }, []);
+
 
   // Conversion functions
   const kgToLbs = (kg) => kg * 2.20462;
@@ -42,36 +47,37 @@ useEffect(() => {
     loadProfileData();
   }, []);
 
-  const loadProfileData = async () => {
-    try {
-      setLoading(true);
+const loadProfileData = async () => {
+  try {
+    setLoading(true);
 
-      // Load profile
-      try {
-        const profileData = await apiService.getProfile();
-        setProfile(profileData);
-      } catch (err) {
-        console.log('No profile found');
-      }
+    const profileData = await apiService.getProfile();
+    setProfile(profileData);
 
-      // Load measurements
-      try {
-        const measurementData = await apiService.getMeasurements(30);
-        setMeasurements(measurementData || []);
+    const measurementData = await apiService.getMeasurements(30);
+    setMeasurements(measurementData || []);
 
-        // Generate AI insight based on data
-        if (measurementData && measurementData.length > 0) {
-          generateAIInsight(measurementData, profile);
-        }
-      } catch (err) {
-        console.log('No measurements found');
-      }
-    } catch (err) {
-      console.error('Error loading profile:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // ✅ SAFE: we're inside an async function
+    const payload = {
+      age: profileData.age,
+      sex: profileData.sex,                 // "male" | "female"
+      height_cm: profileData.height_cm,
+      weight_kg: measurementData?.[0]?.weight_kg ?? profileData.current_weight_kg,
+      activity_level: profileData.activity_level,
+    };
+
+    const result = await apiService.calculateTDEE(payload);
+    setTdeeData(result);
+    setTdeeError('');
+  } catch (err) {
+    console.error('Error fetching TDEE:', err);
+    setTdeeError('Failed to calculate TDEE');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const generateAIInsight = (measurements, profile) => {
     if (measurements.length === 0) {
@@ -347,6 +353,24 @@ useEffect(() => {
                 <div className="stat-value">{stats.age}</div>
                 <div className="stat-label">Age</div>
               </div>
+
+              {/* TDEE Stat */}
+              {tdeeError ? (
+                <div className="stat-item">
+                  <div className="stat-value">N/A</div>
+                  <div className="stat-label">TDEE (Error)</div>
+                </div>
+              ) : !tdeeData ? (
+                <div className="stat-item">
+                  <div className="stat-value">...</div>
+                  <div className="stat-label">Calculating TDEE</div>
+                </div>
+              ) : (
+                <div className="stat-item">
+                  <div className="stat-value">{Math.round(tdeeData.tdee).toLocaleString()}</div>
+                  <div className="stat-label">TDEE (Calories / Day)</div>
+                </div>
+              )}
             </div>
           </div>
 
