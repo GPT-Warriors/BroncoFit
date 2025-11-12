@@ -143,7 +143,8 @@ function App() {
       />
 
       <header className="app-header">
-        <h1>🏋️‍♂️ BroncoFit</h1>
+        <img src="/broncofit_logo.png" alt="BroncoFit Logo" className="app-logo" />
+        <h1>BroncoFit</h1>
         <p className="tagline">
           Revolutionary fitness tracking with intelligent AI coaching
         </p>

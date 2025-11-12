@@ -14,6 +14,19 @@
   margin-bottom: 3rem;
 }
 
+.app-logo {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 1.5rem;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+  transition: transform 0.3s ease;
+}
+
+.app-logo:hover {
+  transform: scale(1.05);
+}
+
 .app-header h1 {
   color: #ff6b35;
   font-size: 3.5rem;
@@ -99,6 +112,12 @@
 @media (max-width: 768px) {
   .App {
     padding: 1rem;
+  }
+
+  .app-logo {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 1rem;
   }
 
   .app-header h1 {
