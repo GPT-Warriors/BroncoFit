@@ -72,13 +72,13 @@ describe('LoginPage', () => {
   });
 
   it('should switch to signup page', () => {
-    const mockOnBack = vi.fn();
+    const mockOnNavigateToSignup = vi.fn();
 
-    render(<LoginPage onSuccess={vi.fn()} onBack={mockOnBack} />);
+    render(<LoginPage onSuccess={vi.fn()} onBack={vi.fn()} onNavigateToSignup={mockOnNavigateToSignup} />);
 
     const signupLink = screen.getByText(/sign up here/i);
     fireEvent.click(signupLink);
 
-    expect(mockOnBack).toHaveBeenCalled();
+    expect(mockOnNavigateToSignup).toHaveBeenCalled();
   });
 });
