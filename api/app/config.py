@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+import sys
 
 
 class Settings(BaseSettings):
@@ -24,5 +25,17 @@ class Settings(BaseSettings):
         case_sensitive = False
 
 
-settings = Settings()
+try:
+    settings = Settings()
+except Exception as e:
+    print("\n" + "="*60)
+    print("ERROR: Failed to load configuration")
+    print("="*60)
+    print(f"\n{str(e)}\n")
+    print("Make sure you have a .env file with all required variables:")
+    print("  - JWT_SECRET_KEY")
+    print("  - GEMINI_API_KEY")
+    print("\nSee .env.example for a template.")
+    print("="*60 + "\n")
+    sys.exit(1)
 
