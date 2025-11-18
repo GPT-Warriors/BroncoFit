@@ -1,4 +1,5 @@
-// Hamburger Menu Component
+/* Hamburger Menu Component - Modern Dark Theme */
+
 .hamburger-menu {
   position: fixed;
   top: 20px;
@@ -11,9 +12,9 @@
   top: 20px;
   left: 20px;
   z-index: 1002;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-green), #00cc6f);
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   width: 50px;
   height: 50px;
   cursor: pointer;
@@ -22,17 +23,17 @@
   justify-content: center;
   align-items: center;
   gap: 5px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-glow-green), var(--shadow-md);
   transition: all 0.3s ease;
 }
 
 .hamburger-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 0 30px var(--accent-green-glow), var(--shadow-lg);
 }
 
 .hamburger-button:active {
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .hamburger-button.open {
@@ -43,7 +44,7 @@
 .hamburger-button span {
   width: 25px;
   height: 3px;
-  background: white;
+  background: var(--bg-primary);
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -67,8 +68,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
@@ -88,8 +89,10 @@
   bottom: 0;
   width: 300px;
   max-width: 85vw;
-  background: white;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-color);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
   z-index: 1001;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
@@ -108,8 +111,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-green), #00cc6f);
+  color: var(--bg-primary);
+  box-shadow: var(--shadow-glow-green);
 }
 
 .side-panel-header h2 {
@@ -119,12 +123,12 @@
 }
 
 .close-button {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(10, 10, 10, 0.2);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   width: 36px;
   height: 36px;
-  color: white;
+  color: var(--bg-primary);
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -134,7 +138,7 @@
 }
 
 .close-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(10, 10, 10, 0.3);
 }
 
 /* Side Panel Content */
@@ -148,7 +152,7 @@
 /* User Info Section */
 .user-info {
   padding: 24px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   gap: 15px;
@@ -158,14 +162,15 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-green), #00cc6f);
+  color: var(--bg-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
   font-weight: 700;
   flex-shrink: 0;
+  box-shadow: var(--shadow-glow-green);
 }
 
 .user-details {
@@ -177,12 +182,12 @@
   font-weight: 600;
   font-size: 16px;
   margin-bottom: 4px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .user-info-email {
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -192,18 +197,21 @@
 .guest-welcome {
   padding: 30px 20px;
   text-align: center;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .guest-welcome h3 {
   margin: 0 0 10px 0;
-  color: #2c3e50;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 1.5rem;
 }
 
 .guest-welcome p {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -220,32 +228,33 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  color: #2c3e50;
+  color: var(--text-primary);
   border-left: 3px solid transparent;
 }
 
 .menu-item:hover {
-  background: #f8f9fa;
-  border-left-color: #667eea;
+  background: rgba(0, 255, 136, 0.05);
+  border-left-color: var(--accent-green);
 }
 
 .menu-item:active {
-  background: #e9ecef;
+  background: rgba(0, 255, 136, 0.1);
 }
 
 .menu-item.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--accent-green), #00cc6f);
+  color: var(--bg-primary);
   margin: 10px 15px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border-left: none;
   font-weight: 600;
+  box-shadow: var(--shadow-glow-green);
 }
 
 .menu-item.primary:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+  background: linear-gradient(135deg, #00e67a, #00b35e);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 0 25px var(--accent-green-glow), var(--shadow-md);
 }
 
 .menu-item-icon {
@@ -262,67 +271,36 @@
 
 /* Side Panel Footer */
 .side-panel-footer {
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-color);
   padding: 10px 0;
   margin-top: auto;
 }
 
 .menu-item.logout {
-  color: #dc3545;
+  color: #ff6b6b;
 }
 
 .menu-item.logout:hover {
-  background: #fff5f5;
-  border-left-color: #dc3545;
+  background: rgba(255, 59, 48, 0.1);
+  border-left-color: #ff6b6b;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .side-panel {
-    background: #1e1e1e;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
-  }
+/* Custom Scrollbar for Side Panel */
+.side-panel-content::-webkit-scrollbar {
+  width: 8px;
+}
 
-  .user-info,
-  .guest-welcome,
-  .side-panel-footer {
-    border-color: #333;
-  }
+.side-panel-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
 
-  .user-info-name,
-  .guest-welcome h3 {
-    color: #e0e0e0;
-  }
+.side-panel-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-green), var(--accent-gold));
+  border-radius: 10px;
+}
 
-  .user-info-email,
-  .guest-welcome p {
-    color: #999;
-  }
-
-  .menu-item {
-    color: #e0e0e0;
-  }
-
-  .menu-item:hover {
-    background: #2a2a2a;
-  }
-
-  .menu-item:active {
-    background: #333;
-  }
-
-  .menu-item.logout {
-    color: #ff6b6b;
-  }
-
-  .menu-item.logout:hover {
-    background: #2a1a1a;
-    border-left-color: #ff6b6b;
-  }
-
-  .sidebar-overlay {
-    background: rgba(0, 0, 0, 0.7);
-  }
+.side-panel-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-green);
 }
 
 /* Mobile optimizations */

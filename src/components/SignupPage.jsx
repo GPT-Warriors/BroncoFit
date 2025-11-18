@@ -2,7 +2,7 @@ import { useState } from 'react';
 import apiService from '../services/api';
 import './Auth.css';
 
-function SignupPage({ onSuccess, onBack }) {
+function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
   const [step, setStep] = useState(1); 
   const [formData, setFormData] = useState({
     // Account info
@@ -388,7 +388,7 @@ function SignupPage({ onSuccess, onBack }) {
 
         <div className="auth-footer">
           Already have an account?{' '}
-          <span className="auth-link" onClick={() => onBack()}>
+          <span className="auth-link" onClick={onNavigateToLogin}>
             Login here
           </span>
         </div>

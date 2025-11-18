@@ -80,6 +80,10 @@ function HamburgerMenu({ user, onNavigate, onLogout }) {
                   <span className="menu-item-icon">👤</span>
                   <span className="menu-item-text">Profile</span>
                 </div>
+                <div className="menu-item primary" onClick={() => handleMenuClick('coach')}>
+                  <span className="menu-item-icon">🤖</span>
+                  <span className="menu-item-text">AI Coach</span>
+                </div>
                 <div className="menu-item" onClick={() => handleMenuClick('dashboard')}>
                   <span className="menu-item-icon">📊</span>
                   <span className="menu-item-text">Dashboard</span>

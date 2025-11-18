@@ -125,3 +125,110 @@ class MeasurementOut(MeasurementCreate):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+# Workout Models
+class ExerciseType(str, Enum):
+    STRENGTH = "strength"
+    CARDIO = "cardio"
+    FLEXIBILITY = "flexibility"
+    SPORTS = "sports"
+
+
+class WorkoutExercise(BaseModel):
+    exercise_name: str
+    exercise_type: ExerciseType
+    sets: Optional[int] = None
+    reps: Optional[int] = None
+    weight_kg: Optional[float] = None
+    duration_minutes: Optional[int] = None
+    distance_km: Optional[float] = None
+    notes: Optional[str] = None
+
+
+class WorkoutCreate(BaseModel):
+    workout_name: str
+    exercises: list[WorkoutExercise]
+    workout_date: Optional[datetime] = None
+    duration_minutes: Optional[int] = None
+    notes: Optional[str] = None
+
+
+class WorkoutOut(WorkoutCreate):
+    id: str
+    user_id: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Nutrition Models
+class MealType(str, Enum):
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    DINNER = "dinner"
+    SNACK = "snack"
+
+
+class FoodItem(BaseModel):
+    food_name: str
+    calories: float
+    protein_g: Optional[float] = None
+    carbs_g: Optional[float] = None
+    fat_g: Optional[float] = None
+    serving_size: Optional[str] = None
+
+
+class MealCreate(BaseModel):
+    meal_type: MealType
+    foods: list[FoodItem]
+    meal_date: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+class MealOut(MealCreate):
+    id: str
+    user_id: str
+    total_calories: float
+    total_protein_g: float
+    total_carbs_g: float
+    total_fat_g: float
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# AI Coach Models
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+    timestamp: Optional[datetime] = None
+
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_history: Optional[list[ChatMessage]] = []
+
+
+class ChatResponse(BaseModel):
+    response: str
+    timestamp: datetime
+
+
+# Workout Plan Models
+class WorkoutPlanRequest(BaseModel):
+    goal: FitnessGoal
+    experience_level: str  # "beginner", "intermediate", "advanced"
+    days_per_week: int = Field(..., ge=1, le=7)
+    equipment_available: list[str] = []  # ["dumbbells", "barbell", "resistance_bands", etc.]
+    duration_per_session: int = Field(..., ge=15, le=120)  # minutes
+
+
+class WorkoutPlanOut(BaseModel):
+    plan_name: str
+    description: str
+    duration_weeks: int
+    workouts: list[dict]  # Generated workout plan structure
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+

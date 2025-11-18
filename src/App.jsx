@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import HamburgerMenu from './components/HamburgerMenu'
+import Navigation from './components/Navigation'
 import SignupPage from './components/SignupPage'
 import LoginPage from './components/LoginPage'
-import ProfilePage from './components/ProfilePage'
+import StatsPage from './components/StatsPage'
+import AICoachPage from './components/AICoachPage'
+import DashboardPage from './components/DashboardPage'
+import WorkoutLogger from './components/WorkoutLogger'
+import NutritionLogger from './components/NutritionLogger'
+import ExerciseLibrary from './components/ExerciseLibrary'
 import apiService from './services/api'
 
 
@@ -46,7 +51,7 @@ const MOCK_MEASUREMENTS = [
 ];
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home') // home, signup, login, profile, dashboard, settings
+  const [currentPage, setCurrentPage] = useState('home') // home, signup, login, profile, dashboard, workout-log, nutrition-log, coach, settings
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -93,12 +98,16 @@ function App() {
 
   const handleLoginSuccess = (userData) => {
     setUser(userData)
-    setCurrentPage('profile')
+    setCurrentPage('dashboard')
   }
 
   const handleSignupSuccess = (userData) => {
     setUser(userData)
-    setCurrentPage('profile')
+    setCurrentPage('dashboard')
+  }
+
+  const handleLogSuccess = () => {
+    setCurrentPage('dashboard')
   }
 
   const handleLogout = () => {
@@ -122,73 +131,90 @@ function App() {
 
   // Render different pages based on currentPage state
   if (currentPage === 'signup') {
-    return <SignupPage onSuccess={handleSignupSuccess} onBack={handleBackToHome} />
+    return <SignupPage onSuccess={handleSignupSuccess} onBack={handleBackToHome} onNavigateToLogin={() => setCurrentPage('login')} />
   }
 
   if (currentPage === 'login') {
-    return <LoginPage onSuccess={handleLoginSuccess} onBack={handleBackToHome} />
+    return <LoginPage onSuccess={handleLoginSuccess} onBack={handleBackToHome} onNavigateToSignup={() => setCurrentPage('signup')} />
+  }
+
+  if (currentPage === 'dashboard') {
+    return <DashboardPage user={user} onBack={handleBackToHome} onNavigate={handleNavigation} />
   }
 
   if (currentPage === 'profile') {
-    return <ProfilePage user={user} onBack={handleBackToHome} />
+    return <StatsPage user={user} onBack={handleBackToHome} />
+  }
+
+  if (currentPage === 'coach') {
+    return <AICoachPage user={user} onBack={handleBackToHome} />
+  }
+
+  if (currentPage === 'workout-log') {
+    return <WorkoutLogger user={user} onBack={() => setCurrentPage('dashboard')} onSuccess={handleLogSuccess} />
+  }
+
+  if (currentPage === 'nutrition-log') {
+    return <NutritionLogger user={user} onBack={() => setCurrentPage('dashboard')} onSuccess={handleLogSuccess} />
+  }
+
+  if (currentPage === 'exercises') {
+    return <ExerciseLibrary user={user} onBack={() => setCurrentPage('dashboard')} />
   }
 
   // Home page (default)
   return (
     <div className="App">
-      <HamburgerMenu
+      <Navigation
         user={user}
         onNavigate={handleNavigation}
         onLogout={handleLogout}
+        currentPage={currentPage}
       />
 
       <header className="app-header">
-        <img src="/broncofit_logo.png" alt="BroncoFit Logo" className="app-logo" />
-        <h1>BroncoFit</h1>
+        <h1>Transform Your Fitness.<br />Unlock Your Potential.</h1>
         <p className="tagline">
-          Revolutionary fitness tracking with intelligent AI coaching
+          Elite AI-powered coaching that adapts to your goals, tracks your progress, and pushes you beyond your limits.
         </p>
+        {!user && (
+          <div style={{ marginTop: '20px', display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => handleNavigation('signup')}
+              className="primary"
+            >
+              Get Started
+            </button>
+            <button
+              onClick={() => handleNavigation('coach')}
+              className="secondary"
+            >
+              Explore AI Coach
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="main-content">
         <section className="welcome-section">
-          <h2>Welcome to Your Fitness Journey!</h2>
+          <h2>Performance-Driven Training</h2>
           <p>
-            Our AI coach adapts to your progress, lifestyle, and goals to
-            provide real-time guidance and motivation for your personalized
-            workout plans and weight loss journey.
+            Track every rep, measure every metric, and dominate every workout with intelligent analytics
+            and personalized coaching that evolves with you.
           </p>
-          {!user && (
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          {user && (
+            <div style={{ marginTop: '30px', display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
-                onClick={() => handleNavigation('signup')}
-                style={{
-                  padding: '12px 24px',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
+                onClick={() => handleNavigation('dashboard')}
+                className="primary"
               >
-                Get Started
+                View Dashboard
               </button>
               <button
-                onClick={() => handleNavigation('login')}
-                style={{
-                  padding: '12px 24px',
-                  background: 'white',
-                  color: '#667eea',
-                  border: '2px solid #667eea',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
+                onClick={() => handleNavigation('coach')}
+                className="secondary"
               >
-                Login
+                AI Coach
               </button>
             </div>
           )}

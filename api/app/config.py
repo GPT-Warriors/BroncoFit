@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
 
+    # Gemini AI Configuration
+    gemini_api_key: str
+
     class Config:
         env_file = ".env"
         case_sensitive = False

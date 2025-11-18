@@ -173,6 +173,93 @@ class ApiService {
     return await this.request('/measurements/latest');
   }
 
+  // ==================== AI Coach ====================
+  async chatWithCoach(message, conversationHistory = []) {
+    return await this.request('/ai-coach/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        message,
+        conversation_history: conversationHistory
+      }),
+    });
+  }
+
+  async generateWorkoutPlan(planRequest) {
+    return await this.request('/ai-coach/generate-workout-plan', {
+      method: 'POST',
+      body: JSON.stringify(planRequest),
+    });
+  }
+
+  async suggestWorkout(message) {
+    return await this.request('/ai-coach/suggest-workout', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  }
+
+  // ==================== Workouts ====================
+  async getWorkouts(limit = 30, skip = 0) {
+    return await this.request(`/workouts?limit=${limit}&skip=${skip}`);
+  }
+
+  async createWorkout(workoutData) {
+    return await this.request('/workouts', {
+      method: 'POST',
+      body: JSON.stringify(workoutData),
+    });
+  }
+
+  async getLatestWorkout() {
+    return await this.request('/workouts/latest');
+  }
+
+  async updateWorkout(workoutId, workoutData) {
+    return await this.request(`/workouts/${workoutId}`, {
+      method: 'PUT',
+      body: JSON.stringify(workoutData),
+    });
+  }
+
+  async deleteWorkout(workoutId) {
+    return await this.request(`/workouts/${workoutId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== Nutrition ====================
+  async getMeals(limit = 30, skip = 0) {
+    return await this.request(`/nutrition?limit=${limit}&skip=${skip}`);
+  }
+
+  async getTodaysMeals() {
+    return await this.request('/nutrition/today');
+  }
+
+  async getTodaysNutritionSummary() {
+    return await this.request('/nutrition/summary/today');
+  }
+
+  async createMeal(mealData) {
+    return await this.request('/nutrition', {
+      method: 'POST',
+      body: JSON.stringify(mealData),
+    });
+  }
+
+  async updateMeal(mealId, mealData) {
+    return await this.request(`/nutrition/${mealId}`, {
+      method: 'PUT',
+      body: JSON.stringify(mealData),
+    });
+  }
+
+  async deleteMeal(mealId) {
+    return await this.request(`/nutrition/${mealId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // ==================== Helper Methods ====================
   isAuthenticated() {
     return !!this.token;

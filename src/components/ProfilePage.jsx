@@ -402,33 +402,34 @@ const loadProfileData = async () => {
             <div className="progress-chart">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
                   <XAxis
                     dataKey="name"
-                    stroke="#7f8c8d"
-                    style={{ fontSize: '12px' }}
+                    stroke="#6b6b6b"
+                    style={{ fontSize: '12px', fill: '#b0b0b0' }}
                   />
                   <YAxis
-                    stroke="#7f8c8d"
-                    style={{ fontSize: '12px' }}
-                    label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft' }}
+                    stroke="#6b6b6b"
+                    style={{ fontSize: '12px', fill: '#b0b0b0' }}
+                    label={{ value: 'Weight (lbs)', angle: -90, position: 'insideLeft', fill: '#b0b0b0' }}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: 'white',
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
-                      padding: '10px'
+                      background: 'rgba(26, 26, 26, 0.95)',
+                      border: '1px solid rgba(0, 255, 136, 0.2)',
+                      borderRadius: '12px',
+                      padding: '10px',
+                      color: '#ffffff'
                     }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ color: '#b0b0b0' }} />
                   <Line
                     type="monotone"
                     dataKey="weight"
-                    stroke="#667eea"
+                    stroke="#00ff88"
                     strokeWidth={3}
-                    dot={{ fill: '#667eea', r: 5 }}
-                    activeDot={{ r: 7 }}
+                    dot={{ fill: '#00ff88', r: 5 }}
+                    activeDot={{ r: 7, fill: '#ffd700' }}
                     name="Weight (lbs)"
                   />
                 </LineChart>
