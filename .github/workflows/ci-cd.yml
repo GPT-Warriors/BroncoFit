@@ -42,6 +42,7 @@ jobs:
           JWT_SECRET_KEY: test-secret-key-for-ci
           JWT_ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+          GEMINI_API_KEY: test-gemini-api-key-for-ci
 
       - name: Upload backend coverage to CodeCov
         uses: codecov/codecov-action@v3
