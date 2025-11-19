@@ -1,4 +1,7 @@
-﻿# BroncoFit ðŸ‹ï¸â€â™‚ï¸
+[![CI/CD Pipeline](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml)
+![GitHub License](https://img.shields.io/github/license/GPT-Warriors/BroncoFit)
+[![codecov](https://codecov.io/gh/GPT-Warriors/BroncoFit/branch/main/graph/badge.svg?token=EQR0FSM927)](https://codecov.io/gh/GPT-Warriors/BroncoFit)
+ # BroncoFit
 
 BroncoFit is an end-to-end fitness companion that pairs a modern Vite + React frontend with a FastAPI backend to deliver AI-assisted coaching, nutrition logging, and performance analytics.
 
@@ -13,23 +16,6 @@ BroncoFit is an end-to-end fitness companion that pairs a modern Vite + React fr
 - **Frontend:** React 19, Vite, Recharts, Vitest, Testing Library
 - **Backend:** FastAPI, Motor (MongoDB), Pydantic, jose, bcrypt, Google Gemini API
 - **Tooling:** ESLint, pytest, GitHub Actions CI
-
-## Repository Layout
-```
-BroncoFit/
-â”œâ”€â”€ api/                  # FastAPI application
-â”‚   â”œâ”€â”€ app/              # Routers, models, services
-â”‚   â”œâ”€â”€ requirements.txt
-â”‚   â””â”€â”€ README.md         # Backend specific docs
-â”œâ”€â”€ public/               # Static assets served by Vite
-â”œâ”€â”€ src/                  # React application
-â”‚   â”œâ”€â”€ components/
-â”‚   â”œâ”€â”€ services/
-â”‚   â””â”€â”€ data/
-â”œâ”€â”€ package.json
-â”œâ”€â”€ vite.config.js
-â””â”€â”€ README.md             # You are here
-```
 
 ## Prerequisites
 - Node.js 18+
