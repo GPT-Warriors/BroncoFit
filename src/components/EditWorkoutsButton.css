@@ -1,0 +1,82 @@
+.edit-workouts-btn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.edit-workouts-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+}
+
+.edit-workouts-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+}
+
+.edit-workouts-btn svg {
+  flex-shrink: 0;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .edit-workouts-btn {
+    bottom: 70px;
+    right: 16px;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .edit-workouts-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .edit-workouts-btn {
+    bottom: 65px;
+    right: 12px;
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+}
+
+/* Adjust for iOS safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .edit-workouts-btn {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Animation on mount */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.edit-workouts-btn {
+  animation: slideInRight 0.5s ease-out;
+}

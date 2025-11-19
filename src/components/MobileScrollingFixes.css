@@ -1,0 +1,295 @@
+/* ===========================
+   BRONCOFIT MOBILE SCROLLING FIXES
+   Ensures smooth scrolling on all devices
+   =========================== */
+
+/* Reset and enable scrolling */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+body {
+  overflow-y: auto; /* Enable vertical scrolling */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  position: relative;
+}
+
+/* Main app container - Use min-height instead of height */
+.App {
+  min-height: 100vh; /* NOT height: 100vh */
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Fix for mobile browsers with dynamic viewport (iOS Safari, Chrome) */
+@supports (-webkit-touch-callout: none) {
+  .App {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Auth Pages - Critical Fix */
+.auth-container {
+  overflow: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+}
+
+.auth-card {
+  max-width: 100%;
+  overflow: visible;
+  position: relative;
+}
+
+/* All page containers */
+.profile-container,
+.dashboard-page,
+.stats-page,
+.ai-coach-page,
+.exercise-library-page,
+.workout-logger-page,
+.nutrition-logger-page {
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+/* Form containers */
+.auth-form,
+.profile-form,
+.logger-form,
+.measurement-form {
+  overflow: visible;
+  position: relative;
+}
+
+.form-container,
+.logger-container,
+.library-container,
+.profile-content {
+  max-width: 100%;
+  overflow: visible;
+  position: relative;
+}
+
+/* Fix input focus scrolling issues on mobile */
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Prevent zoom on input focus (iOS) - CRITICAL */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  font-size: 16px; /* Prevents auto-zoom on iOS */
+}
+
+/* Fix for keyboard overlay issues on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+
+  .App {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+
+  /* All page containers on mobile */
+  .profile-container,
+  .auth-container,
+  .dashboard-page,
+  .stats-page,
+  .ai-coach-page,
+  .exercise-library-page,
+  .workout-logger-page,
+  .nutrition-logger-page {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+    padding-bottom: 100px; /* Extra space for mobile keyboard */
+  }
+
+  /* Form containers on mobile */
+  .auth-card,
+  .logger-form,
+  .profile-content,
+  .measurement-form {
+    padding-bottom: 150px; /* Extra padding for keyboard */
+  }
+
+  /* Add safe area padding for iOS notch */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .profile-container,
+    .auth-container,
+    .dashboard-page,
+    .stats-page,
+    .ai-coach-page,
+    .workout-logger-page,
+    .nutrition-logger-page,
+    .exercise-library-page {
+      padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .auth-card,
+  .logger-container,
+  .profile-content {
+    padding: 16px;
+    padding-bottom: 120px;
+  }
+}
+
+/* Landscape mode on mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+  .profile-container,
+  .auth-container,
+  .dashboard-page,
+  .stats-page {
+    min-height: auto;
+    padding-bottom: 80px;
+  }
+}
+
+/* Fix for fixed/absolute positioned elements */
+.fixed-element,
+.floating-button,
+.back-button[style*="position: fixed"],
+.hamburger-button,
+.main-nav {
+  position: fixed;
+  z-index: 1000;
+}
+
+/* Ensure modals are scrollable */
+.modal-overlay {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Chart containers should be scrollable */
+.chart-container,
+.progress-chart {
+  overflow: visible;
+  position: relative;
+}
+
+/* Side panel scrolling */
+.side-panel-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Messages container scrolling (AI Coach) */
+.messages-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Exercise library grid scrolling */
+.exercises-grid {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Workout timeline scrolling */
+.workout-timeline {
+  overflow: visible;
+}
+
+/* Prevent body scroll when modals are open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* Fix for React Recharts responsiveness */
+.recharts-responsive-container {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Ensure all grids are scrollable */
+.profile-grid,
+.stats-grid-modern,
+.stats-grid,
+.prs-grid,
+.totals-grid {
+  overflow: visible;
+}
+
+/* Chat container specific fixes */
+.chat-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: auto;
+  min-height: auto;
+}
+
+/* Navigation fixes */
+.nav-container {
+  overflow: visible;
+}
+
+/* Signup/Login form specific fixes */
+.signup-progress {
+  overflow: visible;
+}
+
+/* Stats page specific */
+.tab-content {
+  overflow: visible;
+}
+
+/* Workout logger specific */
+.exercise-card,
+.meal-card {
+  overflow: visible;
+}
+
+/* Library content */
+.library-content {
+  overflow: visible;
+}
+
+/* Activity feed */
+.activity-feed {
+  overflow: visible;
+}
+
+/* Header sections */
+.app-header,
+.coach-header,
+.dashboard-header,
+.stats-header,
+.library-header,
+.logger-header,
+.profile-header {
+  overflow: visible;
+}
