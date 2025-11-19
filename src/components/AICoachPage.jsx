@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react'
 import apiService from '../services/api'
 import './AICoachPage.css'
 
-function AICoachPage({ user, onBack }) {
+function AICoachPage({ onBack }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hi! I\'m your AI fitness coach. I can create personalized workouts that you can save directly to your workout log! Just ask me for a workout suggestion, or ask about fitness, nutrition, and training advice.',
+      content: 'Hi! I&apos;m your AI fitness coach. I can create personalized workouts that you can save directly to your workout log! Just ask me for a workout suggestion, or ask about fitness, nutrition, and training advice.',
       timestamp: new Date().toISOString()
     }
   ])
@@ -144,7 +144,7 @@ function AICoachPage({ user, onBack }) {
           <div className="banner-icon">✨</div>
           <div className="banner-content">
             <h3>AI Workout Generator</h3>
-            <p>Ask me to create a workout and I'll generate a complete routine you can save directly to your log!</p>
+            <p>Ask me to create a workout and I&apos;ll generate a complete routine you can save directly to your log!</p>
           </div>
         </div>
 

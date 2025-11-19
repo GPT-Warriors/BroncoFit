@@ -87,7 +87,7 @@ function LoginPage({ onSuccess, onBack, onNavigateToSignup }) {
         </form>
 
         <div className="auth-footer">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <span className="auth-link" onClick={onNavigateToSignup}>
             Sign up here
           </span>

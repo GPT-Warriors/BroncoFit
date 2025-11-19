@@ -52,7 +52,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
       try {
         const workout = await apiService.getLatestWorkout();
         setLatestWorkout(workout);
-      } catch (err) {
+      } catch {
         // No workouts yet
       }
     } catch (error) {
@@ -85,7 +85,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
       <div className="dashboard-header">
         <div className="welcome-message">
           <h1>Welcome back, {user?.name?.split(' ')[0] || 'Champion'}! 💪</h1>
-          <p>Let's crush your fitness goals today</p>
+          <p>Let&apos;s crush your fitness goals today</p>
         </div>
         <div className="quick-actions">
           <button className="quick-action-btn primary" onClick={() => onNavigate('workout-log')}>
@@ -128,7 +128,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
         <div className="stat-card calories-card">
           <div className="stat-card-header">
             <span className="stat-icon">🔥</span>
-            <h3>Today's Calories</h3>
+            <h3>Today&apos;s Calories</h3>
           </div>
           <div className="stat-value-large">
             {todaysNutrition?.total_calories?.toFixed(0) || 0}
@@ -142,7 +142,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
               }}
             ></div>
           </div>
-          <div className="stat-label">
+            <div className="stat-label">
             Goal: {tdeeData?.maintenance_calories?.toFixed(0) || '---'} kcal
           </div>
         </div>

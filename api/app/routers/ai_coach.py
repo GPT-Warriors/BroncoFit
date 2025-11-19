@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
-from app.models import ChatRequest, ChatResponse, WorkoutPlanRequest, WorkoutPlanOut
-from app.dependencies import get_current_user
-from app.database import get_database
-from app.ai_coach import chat_with_coach, generate_workout_plan, get_user_context, suggest_workout
+import logging
 from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
+from app.ai_coach import chat_with_coach, generate_workout_plan, get_user_context, suggest_workout
+from app.database import get_database
+from app.dependencies import get_current_user
+from app.models import ChatRequest, ChatResponse, WorkoutPlanRequest, WorkoutPlanOut
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai-coach", tags=["AI Coach"])
 
@@ -70,7 +75,7 @@ async def chat(
         )
         
     except Exception as e:
-        print(f"Chat error: {e}")
+        logger.exception("Chat error")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -108,7 +113,7 @@ async def create_workout_plan(
         return plan
 
     except Exception as e:
-        print(f"Workout plan generation error: {e}")
+        logger.exception("Workout plan generation error")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -151,5 +156,5 @@ async def get_workout_suggestion(
         return result
 
     except Exception as e:
-        print(f"Workout suggestion error: {e}")
+        logger.exception("Workout suggestion error")
         raise HTTPException(status_code=500, detail=str(e))

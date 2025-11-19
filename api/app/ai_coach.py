@@ -1,10 +1,15 @@
+import json
+import logging
+import re
+from datetime import datetime
+from typing import Optional
+
 import google.generativeai as genai
+
 from app.config import settings
 from app.models import ChatMessage
-from typing import Optional
-from datetime import datetime
-import json
-import re
+
+logger = logging.getLogger(__name__)
 
 # Configure Gemini
 genai.configure(api_key=settings.gemini_api_key)
@@ -95,8 +100,8 @@ Keep responses concise but informative (2-4 paragraphs max).
     try:
         response = model.generate_content("\n\n".join(messages))
         return response.text
-    except Exception as e:
-        print(f"Error generating AI response: {e}")
+    except Exception:
+        logger.exception("Error generating AI response")
         return "I'm having trouble connecting right now. Please try again in a moment."
 
 
@@ -152,8 +157,8 @@ Focus on progressive overload and sustainability.
             "ai_generated_plan": response.text,
             "created_at": datetime.now()
         }
-    except Exception as e:
-        print(f"Error generating workout plan: {e}")
+    except Exception:
+        logger.exception("Error generating workout plan")
         raise Exception("Failed to generate workout plan")
 
 
@@ -227,15 +232,14 @@ Rules:
             "message": "Here's a workout I've created for you! You can review it and save it directly to your workout log."
         }
 
-    except json.JSONDecodeError as e:
-        print(f"Error parsing AI JSON response: {e}")
-        print(f"Response was: {response_text}")
+    except json.JSONDecodeError:
+        logger.exception("Error parsing AI JSON response. Raw response: %s", response_text)
         # Return a fallback workout
         return {
             "success": False,
             "error": "Failed to generate structured workout",
             "fallback_text": response_text
         }
-    except Exception as e:
-        print(f"Error generating workout suggestion: {e}")
+    except Exception:
+        logger.exception("Error generating workout suggestion")
         raise Exception("Failed to generate workout suggestion")

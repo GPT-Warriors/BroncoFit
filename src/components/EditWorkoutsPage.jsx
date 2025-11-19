@@ -10,6 +10,7 @@ const EditWorkoutsPage = () => {
 
   useEffect(() => {
     fetchWorkouts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchWorkouts = async () => {

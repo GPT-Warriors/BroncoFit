@@ -2,7 +2,7 @@ import { useState } from 'react';
 import apiService from '../services/api';
 import './WorkoutLogger.css';
 
-function WorkoutLogger({ user, onBack, onSuccess }) {
+function WorkoutLogger({ onBack, onSuccess }) {
   const [workoutName, setWorkoutName] = useState('');
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');

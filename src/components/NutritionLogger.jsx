@@ -2,7 +2,7 @@ import { useState } from 'react';
 import apiService from '../services/api';
 import './WorkoutLogger.css';  // Shared styles
 
-function NutritionLogger({ user, onBack, onSuccess }) {
+function NutritionLogger({ onBack, onSuccess }) {
   const [mealType, setMealType] = useState('breakfast');
   const [foods, setFoods] = useState([
     { food_name: '', calories: '', protein_g: '', carbs_g: '', fat_g: '', serving_size: '' }

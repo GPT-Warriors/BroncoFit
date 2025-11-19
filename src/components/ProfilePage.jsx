@@ -17,21 +17,17 @@ function ProfilePage({ user, onBack }) {
   const [measurementError, setMeasurementError] = useState('');
   const [tdeeData, setTdeeData] = useState(null);
   const [tdeeError, setTdeeError] = useState('');
-
-// 🧪 If mock data exists, use it for design preview
-useEffect(() => {
-  const mockProfile = localStorage.getItem("mock_profile");
-  const mockMeasurements = localStorage.getItem("mock_measurements");
-  const mockTdee = localStorage.getItem("mock_tdee");          
-
-  if (mockProfile && mockMeasurements) {
-    setProfile(JSON.parse(mockProfile));
-    setMeasurements(JSON.parse(mockMeasurements));
-    if (mockTdee) setTdeeData(JSON.parse(mockTdee));            
-    setLoading(false);
-  }
-}, []);
-
+  const [profileForm, setProfileForm] = useState({
+    age: '',
+    sex: 'male',
+    height_cm: '',
+    current_weight_lbs: '',
+    target_weight_lbs: '',
+    activity_level: 'moderate',
+    fitness_goal: 'lose_weight'
+  });
+  const [profileError, setProfileError] = useState('');
+  const [creatingProfile, setCreatingProfile] = useState(false);
 
   // Conversion functions
   const kgToLbs = (kg) => kg * 2.20462;
@@ -45,7 +41,43 @@ useEffect(() => {
 
   useEffect(() => {
     loadProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const generateAIInsight = (measurementsList, profileData) => {
+    if (!measurementsList?.length) {
+      setAiInsight("Start tracking your measurements to get personalized insights!");
+      return;
+    }
+
+    const latestWeightKg = measurementsList[0]?.weight_kg;
+    const oldestWeightKg = measurementsList[measurementsList.length - 1]?.weight_kg;
+    const weightChangeLbs = kgToLbs(latestWeightKg - oldestWeightKg);
+    const daysTracking = measurementsList.length;
+
+    let insight = '';
+
+    if (weightChangeLbs < 0) {
+      insight = `🎉 Great progress! You've lost ${Math.abs(weightChangeLbs).toFixed(1)} lbs over ${daysTracking} measurements. `;
+      insight += `You're on track to reach your goal! Keep up the excellent work with your ${profileData?.activity_level || 'current'} activity level.`;
+    } else if (weightChangeLbs > 0) {
+      insight = `You've gained ${weightChangeLbs.toFixed(1)} lbs over ${daysTracking} measurements. `;
+      if (profileData?.fitness_goal === 'gain_muscle') {
+        insight += `This is great for your muscle gain goal! Make sure you're getting enough protein and maintaining your workout routine.`;
+      } else {
+        insight += `Consider reviewing your nutrition and activity levels. Small adjustments can make a big difference!`;
+      }
+    } else {
+      insight = `Your weight has been stable over ${daysTracking} measurements. `;
+      if (profileData?.fitness_goal === 'maintain') {
+        insight += `Perfect! You're maintaining your target weight successfully.`;
+      } else {
+        insight += `To see changes, try adjusting your calorie intake or increasing activity levels gradually.`;
+      }
+    }
+
+    setAiInsight(insight);
+  };
 
 const loadProfileData = async () => {
   try {
@@ -56,6 +88,7 @@ const loadProfileData = async () => {
 
     const measurementData = await apiService.getMeasurements(30);
     setMeasurements(measurementData || []);
+    generateAIInsight(measurementData || [], profileData);
 
     // ✅ SAFE: we're inside an async function
     const payload = {
@@ -77,41 +110,36 @@ const loadProfileData = async () => {
   }
 };
 
+  const handleProfileInputChange = (field, value) => {
+    setProfileForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
+  const handleCreateProfile = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+    setCreatingProfile(true);
 
-  const generateAIInsight = (measurements, profile) => {
-    if (measurements.length === 0) {
-      setAiInsight("Start tracking your measurements to get personalized insights!");
-      return;
+    try {
+      const payload = {
+        age: profileForm.age ? Number(profileForm.age) : null,
+        sex: profileForm.sex || null,
+        height_cm: profileForm.height_cm ? Number(profileForm.height_cm) : null,
+        current_weight_kg: profileForm.current_weight_lbs ? lbsToKg(Number(profileForm.current_weight_lbs)) : null,
+        target_weight_kg: profileForm.target_weight_lbs ? lbsToKg(Number(profileForm.target_weight_lbs)) : null,
+        activity_level: profileForm.activity_level || null,
+        fitness_goal: profileForm.fitness_goal || null,
+      };
+
+      await apiService.createProfile(payload);
+      await loadProfileData();
+    } catch (err) {
+      setProfileError(err.message || 'Failed to create profile');
+    } finally {
+      setCreatingProfile(false);
     }
-
-    const latestWeightKg = measurements[0]?.weight_kg;
-    const oldestWeightKg = measurements[measurements.length - 1]?.weight_kg;
-    const weightChangeLbs = kgToLbs(latestWeightKg - oldestWeightKg);
-    const daysTracking = measurements.length;
-
-    let insight = '';
-
-    if (weightChangeLbs < 0) {
-      insight = `🎉 Great progress! You've lost ${Math.abs(weightChangeLbs).toFixed(1)} lbs over ${daysTracking} measurements. `;
-      insight += `You're on track to reach your goal! Keep up the excellent work with your ${profile?.activity_level || 'current'} activity level.`;
-    } else if (weightChangeLbs > 0) {
-      insight = `You've gained ${weightChangeLbs.toFixed(1)} lbs over ${daysTracking} measurements. `;
-      if (profile?.fitness_goal === 'gain_muscle') {
-        insight += `This is great for your muscle gain goal! Make sure you're getting enough protein and maintaining your workout routine.`;
-      } else {
-        insight += `Consider reviewing your nutrition and activity levels. Small adjustments can make a big difference!`;
-      }
-    } else {
-      insight = `Your weight has been stable over ${daysTracking} measurements. `;
-      if (profile?.fitness_goal === 'maintain') {
-        insight += `Perfect! You're maintaining your target weight successfully.`;
-      } else {
-        insight += `To see changes, try adjusting your calorie intake or increasing activity levels gradually.`;
-      }
-    }
-
-    setAiInsight(insight);
   };
 
   const formatChartData = () => {
@@ -205,11 +233,118 @@ const loadProfileData = async () => {
           <div className="profile-card">
             <div className="no-data-message">
               <div className="no-data-icon">📊</div>
-              <h2>No Profile Found</h2>
-              <p>Create your profile to start tracking your fitness journey!</p>
-              <button className="create-profile-button" onClick={() => alert('Profile creation form coming soon!')}>
-                Create Profile
-              </button>
+              <h2>Set Up Your Profile</h2>
+              <p>Share a few details so we can personalize your targets and analytics.</p>
+              <form className="measurement-form" onSubmit={handleCreateProfile}>
+                {profileError && <div className="measurement-error">{profileError}</div>}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Age</label>
+                    <input
+                      type="number"
+                      min={13}
+                      max={120}
+                      className="form-input"
+                      value={profileForm.age}
+                      onChange={(e) => handleProfileInputChange('age', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Sex</label>
+                    <select
+                      className="form-input"
+                      value={profileForm.sex}
+                      onChange={(e) => handleProfileInputChange('sex', e.target.value)}
+                      required
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Height (cm)</label>
+                    <input
+                      type="number"
+                      min={100}
+                      max={250}
+                      className="form-input"
+                      value={profileForm.height_cm}
+                      onChange={(e) => handleProfileInputChange('height_cm', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Current Weight (lbs)</label>
+                    <input
+                      type="number"
+                      min={50}
+                      max={1000}
+                      className="form-input"
+                      value={profileForm.current_weight_lbs}
+                      onChange={(e) => handleProfileInputChange('current_weight_lbs', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Target Weight (lbs)</label>
+                    <input
+                      type="number"
+                      min={50}
+                      max={1000}
+                      className="form-input"
+                      value={profileForm.target_weight_lbs}
+                      onChange={(e) => handleProfileInputChange('target_weight_lbs', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Activity Level</label>
+                    <select
+                      className="form-input"
+                      value={profileForm.activity_level}
+                      onChange={(e) => handleProfileInputChange('activity_level', e.target.value)}
+                      required
+                    >
+                      <option value="sedentary">Sedentary</option>
+                      <option value="light">Light</option>
+                      <option value="moderate">Moderate</option>
+                      <option value="active">Active</option>
+                      <option value="very_active">Very Active</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Fitness Goal</label>
+                    <select
+                      className="form-input"
+                      value={profileForm.fitness_goal}
+                      onChange={(e) => handleProfileInputChange('fitness_goal', e.target.value)}
+                      required
+                    >
+                      <option value="lose_weight">Lose weight</option>
+                      <option value="maintain">Maintain weight</option>
+                      <option value="gain_muscle">Gain muscle</option>
+                      <option value="improve_fitness">Improve fitness</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="modal-actions" style={{ marginTop: '1rem' }}>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={creatingProfile}
+                  >
+                    {creatingProfile ? 'Saving...' : 'Save Profile'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

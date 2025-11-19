@@ -1,6 +1,9 @@
+import logging
 from pydantic_settings import BaseSettings
 from typing import Optional
 import sys
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -27,15 +30,9 @@ class Settings(BaseSettings):
 
 try:
     settings = Settings()
-except Exception as e:
-    print("\n" + "="*60)
-    print("ERROR: Failed to load configuration")
-    print("="*60)
-    print(f"\n{str(e)}\n")
-    print("Make sure you have a .env file with all required variables:")
-    print("  - JWT_SECRET_KEY")
-    print("  - GEMINI_API_KEY")
-    print("\nSee .env.example for a template.")
-    print("="*60 + "\n")
+except Exception:
+    logger.exception(
+        "Failed to load configuration. Ensure JWT_SECRET_KEY and GEMINI_API_KEY are set."
+    )
     sys.exit(1)
 

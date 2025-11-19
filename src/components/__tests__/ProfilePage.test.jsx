@@ -89,8 +89,8 @@ describe('ProfilePage', () => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
     });
 
-    // Should show create profile button
-    expect(screen.getByRole('button', { name: /create profile/i })).toBeInTheDocument();
+    // Should show save profile button (new inline form)
+    expect(screen.getByRole('button', { name: /save profile/i })).toBeInTheDocument();
   });
 
   it('should call API to get measurements', async () => {

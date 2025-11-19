@@ -172,7 +172,7 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
           <>
             <div className="auth-header">
               <h1 className="auth-title">Create Account</h1>
-              <p className="auth-subtitle">Let's start with your basic information</p>
+              <p className="auth-subtitle">Let&apos;s start with your basic information</p>
             </div>
 
             <form className="auth-form" onSubmit={handleNext}>

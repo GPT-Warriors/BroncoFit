@@ -3,7 +3,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import apiService from '../services/api';
 import './StatsPage.css';
 
-function StatsPage({ user, onBack }) {
+function StatsPage({ onBack }) {
   const [profile, setProfile] = useState(null);
   const [measurements, setMeasurements] = useState([]);
   const [workouts, setWorkouts] = useState([]);

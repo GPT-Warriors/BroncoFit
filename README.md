@@ -1,207 +1,101 @@
-[![CI/CD Pipeline](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/GPT-Warriors/BroncoFit/actions/workflows/ci-cd.yml)
-![GitHub License](https://img.shields.io/github/license/GPT-Warriors/BroncoFit)
-[![codecov](https://codecov.io/gh/GPT-Warriors/BroncoFit/branch/main/graph/badge.svg?token=EQR0FSM927)](https://codecov.io/gh/GPT-Warriors/BroncoFit)
+﻿# BroncoFit ðŸ‹ï¸â€â™‚ï¸
 
-# 🏋️‍♂️ BroncoFit
+BroncoFit is an end-to-end fitness companion that pairs a modern Vite + React frontend with a FastAPI backend to deliver AI-assisted coaching, nutrition logging, and performance analytics.
 
-Revolutionary fitness tracking app that combines personalized workout plans with intelligent weight loss coaching. Track your measurements, visualize your progress, and achieve your fitness goals.
+## Why BroncoFit
+- Secure authentication backed by JWTs
+- Progress dashboards with charts, PR tracking, and nutrition analytics
+- AI-powered coach for chat guidance and structured workout suggestions
+- Workout and meal logging tied to MongoDB for persistence
+- Responsive, mobile-friendly UI built with React 19 and Recharts
 
-## 🚀 Features
+## Tech Stack
+- **Frontend:** React 19, Vite, Recharts, Vitest, Testing Library
+- **Backend:** FastAPI, Motor (MongoDB), Pydantic, jose, bcrypt, Google Gemini API
+- **Tooling:** ESLint, pytest, GitHub Actions CI
 
-- **User Authentication**: Secure JWT-based authentication system
-- **Progress Tracking**: Track weight, body fat percentage, and measurements over time
-- **Data Visualization**: Interactive charts showing your fitness journey
-- **Profile Management**: Comprehensive user profiles with fitness goals
-- **Modern UI**: Responsive React frontend with intuitive navigation
-- **RESTful API**: FastAPI backend with automatic API documentation
-
-## Built With
-![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.99.1-green?logo=fastapi)
-![React](https://img.shields.io/badge/React-18-blue?logo=react)
-![Nginx](https://img.shields.io/badge/Nginx-gray?logo=nginx)
-
-## 📋 Prerequisites
-
-### Frontend
-- Node.js (version 16 or higher)
-- npm (comes with Node.js)
-
-### Backend
-- Python 3.8 or higher
-- pip (Python package manager)
-
-### General
-- Git
-
-## 🛠️ Quick Setup
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/GPT-Warriors/BroncoFit.git
-cd BroncoFit
-```
-
-### 2. Backend Setup (FastAPI)
-
-```bash
-# Navigate to the API directory
-cd api
-
-# Create a virtual environment (optional but recommended)
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Create .env file (copy from .env.example if available)
-# Add your configuration:
-# SECRET_KEY=your-secret-key-here
-# DATABASE_URL=your-database-url (if using real database)
-
-# Start the backend server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-The backend API will be available at:
-- **API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
-- **Alternative Docs**: http://localhost:8000/redoc
-
-### 3. Frontend Setup (React + Vite)
-
-Open a **new terminal window** in the project root directory:
-
-```bash
-# Install frontend dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-
-The frontend will be available at: http://localhost:5173
-
-## 🏗️ Project Structure
-
+## Repository Layout
 ```
 BroncoFit/
-├── api/                      # FastAPI backend
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py          # FastAPI application entry point
-│   │   ├── models.py        # Database models
-│   │   ├── auth.py          # Authentication logic
-│   │   ├── database.py      # Database connection
-│   │   ├── config.py        # Configuration settings
-│   │   └── routers/         # API route handlers
-│   │       ├── auth.py      # Authentication endpoints
-│   │       ├── profile.py   # User profile endpoints
-│   │       ├── measurements.py  # Measurements endpoints
-│   │       └── calculations.py  # Body metrics calculations
-│   ├── requirements.txt     # Python dependencies
-│   └── README.md
-├── src/                     # React frontend
-│   ├── components/
-│   │   ├── LoginPage.jsx    # Login component
-│   │   ├── SignupPage.jsx   # Registration component
-│   │   ├── ProfilePage.jsx  # User profile & dashboard
-│   │   └── HamburgerMenu.jsx # Navigation menu
-│   ├── services/
-│   │   └── api.js           # API service layer
-│   ├── App.jsx              # Main React component
-│   └── main.jsx             # React entry point
-├── public/                  # Static assets
-├── index.html
-├── package.json             # Frontend dependencies
-├── vite.config.js           # Vite configuration
-└── README.md                # This file
+â”œâ”€â”€ api/                  # FastAPI application
+â”‚   â”œâ”€â”€ app/              # Routers, models, services
+â”‚   â”œâ”€â”€ requirements.txt
+â”‚   â””â”€â”€ README.md         # Backend specific docs
+â”œâ”€â”€ public/               # Static assets served by Vite
+â”œâ”€â”€ src/                  # React application
+â”‚   â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ services/
+â”‚   â””â”€â”€ data/
+â”œâ”€â”€ package.json
+â”œâ”€â”€ vite.config.js
+â””â”€â”€ README.md             # You are here
 ```
 
-## 📦 Available Scripts
+## Prerequisites
+- Node.js 18+
+- npm 9+
+- Python 3.11+
+- MongoDB 6/7 (local or Atlas)
+- Google Gemini API key (for AI coach features)
 
-### Frontend
-- `npm run dev` - Start the React development server
-- `npm run build` - Build the React app for production
-- `npm run preview` - Preview the production build
-- `npm run lint` - Run ESLint on the source code
+## Backend Setup (FastAPI)
+1. `cd api`
+2. Create and activate a virtual environment
+   - Windows: `python -m venv venv && .\venv\Scripts\activate`
+   - macOS/Linux: `python3 -m venv venv && source venv/bin/activate`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Create `api/.env` with the following keys:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/broncofit
+   DATABASE_NAME=broncofit
+   JWT_SECRET_KEY=replace-with-strong-secret
+   JWT_ALGORITHM=HS256
+   ACCESS_TOKEN_EXPIRE_MINUTES=1440
+   GEMINI_API_KEY=replace-with-google-gemini-key
+   ```
+5. Start the API: `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
+6. Docs are available at `http://localhost:8000/docs`
 
-### Backend
-- `uvicorn app.main:app --reload` - Start FastAPI with auto-reload
-- `uvicorn app.main:app --host 0.0.0.0 --port 8000` - Start with custom host/port
+## Frontend Setup (React + Vite)
+1. From the repo root run `npm install`
+2. Start the dev server: `npm run dev`
+3. Vite serves the app at `http://localhost:5173`
 
-## 🔌 API Endpoints
+## Local Development Flow
+1. Run the FastAPI server (step above)
+2. Run the Vite dev server
+3. Update `src/services/api.js` if your API base URL differs from `/api`
 
-The backend provides the following main endpoint groups:
+## Testing & Quality
+| Area      | Command                              |
+|-----------|---------------------------------------|
+| Frontend  | `npm test` (single run)
+|           | `npm run test:watch`
+|           | `npm run test:coverage`
+| Lint      | `npm run lint`
+| Backend   | `cd api && pytest tests -v`
 
-- **Authentication** (`/auth`)
-  - POST `/auth/register` - Create new user account
-  - POST `/auth/login` - User login
-  - GET `/auth/me` - Get current user info
+## Production Build & Deployment
+- Build frontend assets: `npm run build` (outputs to `dist/`, ignored by git)
+- Serve the compiled frontend behind nginx or any static file host
+- Run the API with multiple workers:
+  `uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4`
+- Example systemd service is documented in `api/README.md`
 
-- **Profile** (`/profile`)
-  - GET `/profile` - Get user profile
-  - PUT `/profile` - Update user profile
-  - POST `/profile/initialize` - Create initial profile with stats
+## API Overview
+- `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`
+- `GET/PUT /api/profile`, `POST /api/profile/initialize`
+- `GET/POST /api/measurements`, `GET /api/measurements/latest`
+- `POST /api/calculations/tdee|bmi`
+- `GET/POST /api/workouts`, `GET /api/workouts/latest`
+- `GET/POST /api/nutrition`
+- `POST /api/ai-coach/chat` and `/ai-coach/suggest-workout`
 
-- **Measurements** (`/measurements`)
-  - GET `/measurements` - Get all measurements
-  - POST `/measurements` - Add new measurement
-  - GET `/measurements/latest` - Get most recent measurement
+## Troubleshooting
+- **Frontend build errors:** remove `node_modules`, reinstall, and rerun `npm run dev`
+- **Backend connection issues:** verify MongoDB is reachable and credentials are correct
+- **CORS errors:** update the allowed origins list in `api/app/main.py`
+- **AI coach failures:** ensure `GEMINI_API_KEY` is set and has quota
 
-- **Calculations** (`/calculations`)
-  - POST `/calculations/bmi` - Calculate BMI
-  - POST `/calculations/bmr` - Calculate BMR
-  - POST `/calculations/tdee` - Calculate TDEE
-
-Visit http://localhost:8000/docs for interactive API documentation.
-
-## 🚨 Troubleshooting
-
-### Frontend Issues
-- **Port 5173 is busy**: Vite will automatically suggest the next available port
-- **Module not found errors**: Run `npm install` to ensure all dependencies are installed
-- **Build errors**: Clear node_modules and reinstall: `rm -rf node_modules package-lock.json && npm install`
-
-### Backend Issues
-- **Port 8000 is busy**: Change the port using `--port` flag (e.g., `--port 8001`)
-- **Module import errors**: Ensure virtual environment is activated and dependencies are installed
-- **Database connection errors**: Check your `.env` file configuration
-- **CORS errors**: Backend is configured to allow localhost:5173, adjust in `app/main.py` if needed
-
-### General Tips
-- Make sure both frontend and backend are running simultaneously
-- Check that the API URL in `src/services/api.js` matches your backend URL
-- Clear browser cache if seeing stale data
-- Check browser console and terminal for error messages
-
-## 🔮 Future Enhancements
-
-- **AI-Powered Coaching**: Integration with AI models for personalized fitness advice
-- **MongoDB Integration**: Production-ready database for user data
-- **Social Features**: Share progress with friends and fitness community
-- **Workout Plans**: Custom workout routines based on goals
-- **Nutrition Tracking**: Meal planning and calorie tracking
-- **Mobile App**: Native iOS and Android applications
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -m 'Add feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
-
-## 👥 Team
-
-**GPT-Warriors** - CS 4800 Class Project
-
----
-
-**BroncoFit** - Your AI-Powered Fitness Companion 💪
+## License
+BroncoFit is released under the Apache License. See `LICENSE` for details.
