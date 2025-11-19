@@ -73,3 +73,6 @@ dist/
 
 # Logs
 *.log
+
+# Claude AI
+.claude/
