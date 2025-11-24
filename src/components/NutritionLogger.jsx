@@ -18,6 +18,8 @@ function NutritionLogger({ onBack, onSuccess }) {
     { value: 'snack', label: '🍎 Snack' }
   ];
 
+  const getFieldId = (index, field) => `food-${index}-${field}`;
+
   const addFood = () => {
     setFoods([
       ...foods,
@@ -84,8 +86,10 @@ function NutritionLogger({ onBack, onSuccess }) {
 
   const calculateTotals = () => {
     const validFoods = foods.filter(f => f.food_name.trim() && f.calories);
+    const caloriesTotal = validFoods.reduce((sum, f) => sum + (parseFloat(f.calories) || 0), 0);
+
     return {
-      calories: validFoods.reduce((sum, f) => sum + (parseFloat(f.calories) || 0), 0),
+      calories: caloriesTotal,
       protein: validFoods.reduce((sum, f) => sum + (parseFloat(f.protein_g) || 0), 0),
       carbs: validFoods.reduce((sum, f) => sum + (parseFloat(f.carbs_g) || 0), 0),
       fat: validFoods.reduce((sum, f) => sum + (parseFloat(f.fat_g) || 0), 0)
@@ -114,9 +118,12 @@ function NutritionLogger({ onBack, onSuccess }) {
             <h3 className="section-title">Meal Details</h3>
 
             <div className="form-group">
-              <label className="form-label">Meal Type *</label>
+              <label className="form-label" htmlFor="meal-type">
+                Meal Type *
+              </label>
               <select
                 className="form-input"
+                id="meal-type"
                 value={mealType}
                 onChange={(e) => setMealType(e.target.value)}
                 disabled={loading}
@@ -130,9 +137,12 @@ function NutritionLogger({ onBack, onSuccess }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Notes</label>
+              <label className="form-label" htmlFor="meal-notes">
+                Notes
+              </label>
               <textarea
                 className="form-input"
+                id="meal-notes"
                 placeholder="Meal notes or context..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -173,10 +183,13 @@ function NutritionLogger({ onBack, onSuccess }) {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Food Name *</label>
+                  <label className="form-label" htmlFor={getFieldId(index, 'food_name')}>
+                    Food Name *
+                  </label>
                   <input
                     type="text"
                     className="form-input"
+                    id={getFieldId(index, 'food_name')}
                     placeholder="e.g., Chicken Breast"
                     value={food.food_name}
                     onChange={(e) => updateFood(index, 'food_name', e.target.value)}
@@ -186,10 +199,13 @@ function NutritionLogger({ onBack, onSuccess }) {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Calories *</label>
+                    <label className="form-label" htmlFor={getFieldId(index, 'calories')}>
+                      Calories *
+                    </label>
                     <input
                       type="number"
                       className="form-input"
+                      id={getFieldId(index, 'calories')}
                       placeholder="250"
                       value={food.calories}
                       onChange={(e) => updateFood(index, 'calories', e.target.value)}
@@ -199,10 +215,13 @@ function NutritionLogger({ onBack, onSuccess }) {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Serving Size</label>
+                    <label className="form-label" htmlFor={getFieldId(index, 'serving_size')}>
+                      Serving Size
+                    </label>
                     <input
                       type="text"
                       className="form-input"
+                      id={getFieldId(index, 'serving_size')}
                       placeholder="100g"
                       value={food.serving_size}
                       onChange={(e) => updateFood(index, 'serving_size', e.target.value)}
@@ -213,10 +232,13 @@ function NutritionLogger({ onBack, onSuccess }) {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Protein (g)</label>
+                    <label className="form-label" htmlFor={getFieldId(index, 'protein_g')}>
+                      Protein (g)
+                    </label>
                     <input
                       type="number"
                       className="form-input"
+                      id={getFieldId(index, 'protein_g')}
                       placeholder="30"
                       value={food.protein_g}
                       onChange={(e) => updateFood(index, 'protein_g', e.target.value)}
@@ -226,10 +248,13 @@ function NutritionLogger({ onBack, onSuccess }) {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Carbs (g)</label>
+                    <label className="form-label" htmlFor={getFieldId(index, 'carbs_g')}>
+                      Carbs (g)
+                    </label>
                     <input
                       type="number"
                       className="form-input"
+                      id={getFieldId(index, 'carbs_g')}
                       placeholder="10"
                       value={food.carbs_g}
                       onChange={(e) => updateFood(index, 'carbs_g', e.target.value)}
@@ -239,10 +264,13 @@ function NutritionLogger({ onBack, onSuccess }) {
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Fat (g)</label>
+                    <label className="form-label" htmlFor={getFieldId(index, 'fat_g')}>
+                      Fat (g)
+                    </label>
                     <input
                       type="number"
                       className="form-input"
+                      id={getFieldId(index, 'fat_g')}
                       placeholder="5"
                       value={food.fat_g}
                       onChange={(e) => updateFood(index, 'fat_g', e.target.value)}

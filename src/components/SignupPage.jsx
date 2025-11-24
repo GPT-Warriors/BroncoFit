@@ -155,7 +155,7 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
 
       <div className="auth-card">
         {/* Progress Indicator */}
-        <div className="signup-progress">
+        <div className="signup-progress" data-testid="signup-progress">
           <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>
             <div className="progress-circle">1</div>
             <span>Account</span>
@@ -175,14 +175,17 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               <p className="auth-subtitle">Let&apos;s start with your basic information</p>
             </div>
 
-            <form className="auth-form" onSubmit={handleNext}>
+            <form className="auth-form" onSubmit={handleNext} noValidate>
               {error && <div className="auth-error">{error}</div>}
 
               <div className="form-group">
-                <label className="form-label">Full Name</label>
+                <label className="form-label" htmlFor="name">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   name="name"
+                  id="name"
                   className="form-input"
                   placeholder="John Doe"
                   value={formData.name}
@@ -192,10 +195,13 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Email Address</label>
+                <label className="form-label" htmlFor="email">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   name="email"
+                  id="email"
                   className="form-input"
                   placeholder="john@example.com"
                   value={formData.email}
@@ -205,10 +211,13 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label" htmlFor="password">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
+                  id="password"
                   className="form-input"
                   placeholder="At least 8 characters"
                   value={formData.password}
@@ -218,10 +227,13 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Confirm Password</label>
+                <label className="form-label" htmlFor="confirmPassword">
+                  Confirm Password
+                </label>
                 <input
                   type="password"
                   name="confirmPassword"
+                  id="confirmPassword"
                   className="form-input"
                   placeholder="Re-enter your password"
                   value={formData.confirmPassword}
@@ -245,15 +257,18 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               <p className="auth-subtitle">Tell us about your current stats and goals</p>
             </div>
 
-            <form className="auth-form profile-form" onSubmit={handleSubmit}>
+            <form className="auth-form profile-form" onSubmit={handleSubmit} noValidate>
               {error && <div className="auth-error">{error}</div>}
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Age</label>
+                  <label className="form-label" htmlFor="age">
+                    Age
+                  </label>
                   <input
                     type="number"
                     name="age"
+                    id="age"
                     className="form-input"
                     placeholder="25"
                     value={formData.age}
@@ -265,8 +280,11 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Sex</label>
+                  <label className="form-label" htmlFor="sex">
+                    Sex
+                  </label>
                   <select
+                    id="sex"
                     name="sex"
                     className="form-input"
                     value={formData.sex}
@@ -281,12 +299,15 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Height</label>
+                <label className="form-label" htmlFor="height_feet">
+                  Height
+                </label>
                 <div className="form-row">
                   <div className="form-group">
                     <input
                       type="number"
                       name="height_feet"
+                      id="height_feet"
                       className="form-input"
                       placeholder="Feet"
                       value={formData.height_feet}
@@ -300,6 +321,7 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
                     <input
                       type="number"
                       name="height_inches"
+                      id="height_inches"
                       className="form-input"
                       placeholder="Inches"
                       value={formData.height_inches}
@@ -316,10 +338,13 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Current Weight (lbs)</label>
+                  <label className="form-label" htmlFor="current_weight_lbs">
+                    Current Weight (lbs)
+                  </label>
                   <input
                     type="number"
                     name="current_weight_lbs"
+                    id="current_weight_lbs"
                     className="form-input"
                     placeholder="150"
                     value={formData.current_weight_lbs}
@@ -330,10 +355,13 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Target Weight (lbs)</label>
+                  <label className="form-label" htmlFor="target_weight_lbs">
+                    Target Weight (lbs)
+                  </label>
                   <input
                     type="number"
                     name="target_weight_lbs"
+                    id="target_weight_lbs"
                     className="form-input"
                     placeholder="140"
                     value={formData.target_weight_lbs}
@@ -345,8 +373,11 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Activity Level</label>
+                <label className="form-label" htmlFor="activity_level">
+                  Activity Level
+                </label>
                 <select
+                  id="activity_level"
                   name="activity_level"
                   className="form-input"
                   value={formData.activity_level}
@@ -363,8 +394,11 @@ function SignupPage({ onSuccess, onBack, onNavigateToLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Fitness Goal</label>
+                <label className="form-label" htmlFor="fitness_goal">
+                  Fitness Goal
+                </label>
                 <select
+                  id="fitness_goal"
                   name="fitness_goal"
                   className="form-input"
                   value={formData.fitness_goal}
