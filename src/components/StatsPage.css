@@ -9,6 +9,8 @@
   max-width: 100%;
   margin: 0 auto;
   position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Loading State */
@@ -520,6 +522,10 @@
 @media (max-width: 768px) {
   .stats-page {
     padding: 5rem 1rem 2rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: auto;
+    min-height: 100vh;
   }
 
   .stats-header h1 {
