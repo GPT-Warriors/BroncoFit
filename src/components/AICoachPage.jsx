@@ -6,7 +6,7 @@ function AICoachPage({ onBack }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hi! I&apos;m your AI fitness coach. I can create personalized workouts that you can save directly to your workout log! Just ask me for a workout suggestion, or ask about fitness, nutrition, and training advice.',
+      content: 'Hi! I am Bill your AI fitness coach. I can create personalized workouts that you can save directly to your workout log! Just ask me for a workout suggestion, or ask about fitness, nutrition, and training advice.',
       timestamp: new Date().toISOString()
     }
   ])
