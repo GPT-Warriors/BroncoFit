@@ -1,7 +1,7 @@
 /* Auth Pages Styles - Modern Dark Theme */
 .auth-container {
-  position: fixed;
-  inset: 0;
+  position: relative;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
