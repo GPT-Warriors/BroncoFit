@@ -2,6 +2,29 @@ import { useState, useMemo } from 'react';
 import { exerciseLibrary, exerciseCategories, equipmentTypes, difficultyLevels } from '../data/exerciseLibrary';
 import './ExerciseLibrary.css';
 
+function formatDescription(raw = '') {
+  if (!raw) return { text: '', videoUrl: '' };
+
+  // Extract the video URL
+  const match = raw.match(/Video:\s*(https?:\/\/\S+)/i);
+  const videoUrl = match ? match[1] : '';
+  const base = match ? raw.slice(0, match.index).trim() : raw;
+
+  const labels = [
+    'Setup:', 'Execution:', 'Cues:', 'Range:', 'Tempo:', 'Mistakes:',
+    'Common mistakes:', 'Safety:', 'Variants:', 'Progressions:',
+    'Programming:', 'Style:', 'Phases:', 'Grips:'
+  ];
+  const pattern = new RegExp(`\\s*(${labels.map(l => l.replace(/:/g, '\\:')).join('|')})`, 'g');
+
+  const text = base
+    .replace(pattern, '\n$1')
+    .replace(/^\n/, '') // remove leading newline
+    .trim();
+
+  return { text, videoUrl };
+}
+
 function ExerciseLibrary({ onBack, onSelectExercise }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -12,26 +35,40 @@ function ExerciseLibrary({ onBack, onSelectExercise }) {
   // Filter and search exercises
   const filteredExercises = useMemo(() => {
     return exerciseLibrary.filter(exercise => {
-      const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        exercise.muscleGroups.some(mg => mg.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSearch =
+        exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        exercise.muscleGroups.some(mg =>
+          mg.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-      const matchesCategory = categoryFilter === 'all' || exercise.category === categoryFilter;
-      const matchesEquipment = equipmentFilter === 'all' || exercise.equipment === equipmentFilter;
-      const matchesDifficulty = difficultyFilter === 'all' || exercise.difficulty === difficultyFilter;
+      const matchesCategory =
+        categoryFilter === 'all' || exercise.category === categoryFilter;
+      const matchesEquipment =
+        equipmentFilter === 'all' || exercise.equipment === equipmentFilter;
+      const matchesDifficulty =
+        difficultyFilter === 'all' || exercise.difficulty === difficultyFilter;
 
-      return matchesSearch && matchesCategory && matchesEquipment && matchesDifficulty;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesEquipment &&
+        matchesDifficulty
+      );
     });
   }, [searchTerm, categoryFilter, equipmentFilter, difficultyFilter]);
 
-  const handleExerciseClick = (exercise) => {
-    setSelectedExercise(exercise);
-  };
+  const handleExerciseClick = (exercise) => setSelectedExercise(exercise);
 
   const handleUseExercise = () => {
     if (selectedExercise && onSelectExercise) {
       onSelectExercise(selectedExercise);
     }
   };
+
+  // Format description only when a selection exists
+  const formatted = useMemo(() => (
+    selectedExercise ? formatDescription(selectedExercise.description) : { text: '', videoUrl: '' }
+  ), [selectedExercise]);
 
   return (
     <div className="exercise-library-page">
@@ -158,7 +195,14 @@ function ExerciseLibrary({ onBack, onSelectExercise }) {
 
               <div className="detail-section">
                 <h4>How to Perform</h4>
-                <p>{selectedExercise.description}</p>
+                <p className="exercise-description">{formatted.text}</p>
+                {formatted.videoUrl && (
+                  <p>
+                    <a href={formatted.videoUrl} target="_blank" rel="noopener noreferrer">
+                      ▶ Watch video
+                    </a>
+                  </p>
+                )}
               </div>
 
               {onSelectExercise && (

@@ -381,3 +381,17 @@
     padding: 1.5rem;
   }
 }
+
+.exercise-description {
+  white-space: pre-line; 
+  line-height: 1.6;
+}
+
+.exercise-detail a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.exercise-detail a:hover {
+  text-decoration: underline;
+}
