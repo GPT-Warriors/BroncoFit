@@ -268,6 +268,7 @@ describe('ExerciseLibrary', () => {
       expect(detailHeaders.length).toBeGreaterThan(1);
     });
 
+    // UPDATED: no exact phrasing; assert on stable section labels instead
     it('should display exercise description', () => {
       render(<ExerciseLibrary onBack={vi.fn()} />);
 
@@ -276,8 +277,16 @@ describe('ExerciseLibrary', () => {
                           benchPressText.closest('div');
       fireEvent.click(exerciseCard);
 
-      // Should show description
-      expect(screen.getByText(/lie on a bench/i)).toBeInTheDocument();
+      // Find the Bench Press detail panel
+      const detailHeading = screen.getByRole('heading', { level: 2, name: /bench press/i });
+      const detailPanel = detailHeading.closest('.exercise-detail') || detailHeading.parentElement;
+
+      // Ensure the "How to Perform" section is present
+      expect(within(detailPanel).getByText(/how to perform/i)).toBeInTheDocument();
+
+      // The description should contain structured labels, not exact phrases
+      expect(detailPanel).toHaveTextContent(/setup:/i);
+      expect(detailPanel).toHaveTextContent(/execution:/i);
     });
 
     it('should display muscle groups', () => {
@@ -462,4 +471,3 @@ describe('ExerciseLibrary', () => {
     });
   });
 });
-
