@@ -9,7 +9,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [todaysNutrition, setTodaysNutrition] = useState(null);
   const [recentMeasurement, setRecentMeasurement] = useState(null);
   const [tdeeData, setTdeeData] = useState(null);
-  const [latestWorkout, setLatestWorkout] = useState(null); 
+  const [latestWorkout, setLatestWorkout] = useState(null);
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
 
   useEffect(() => {
@@ -36,20 +36,26 @@ function DashboardPage({ user, onBack, onNavigate }) {
         nutritionRes,
         measurementRes,
         latestWorkoutRes,
-        workoutsRes
+        workoutsRes,
       ] = await Promise.allSettled([
         apiService.getProfile(),
         apiService.getTodaysNutritionSummary(),
         apiService.getLatestMeasurement(),
         getLatestWorkoutSafe(),
-        getWorkoutsSafe()
+        getWorkoutsSafe(),
       ]);
 
       if (profileRes.status === 'fulfilled') {
         setProfile(profileRes.value || null);
+
         if (profileRes.value) {
-          const tdee = await apiService.calculateTDEE(profileRes.value);
-          setTdeeData(tdee || null);
+          try {
+            const tdee = await apiService.calculateTDEE(profileRes.value);
+            setTdeeData(tdee || null);
+          } catch (err) {
+            console.error('Error calculating TDEE:', err);
+            setTdeeData(null);
+          }
         }
       }
 
@@ -90,7 +96,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
                 if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
                 if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
                 return str;
-              }) || []
+              }) || [],
           };
         });
         setCalendarWorkouts(formattedForCalendar);
@@ -122,7 +128,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
   const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : null;
 
-  //remaining calories = maintenance - consumed (never below 0)
   const consumed = todaysNutrition?.total_calories ?? 0;
   const maintenance = tdeeData?.maintenance_calories ?? 0;
   const remainingCalories = Math.max(0, Math.round(maintenance - consumed));
@@ -153,7 +158,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
       </div>
 
       <div className="stats-grid-modern">
-        {/* Current Weight */}
         <div className="stat-card weight-card">
           <div className="stat-card-header">
             <span className="stat-icon">⚖️</span>
@@ -166,7 +170,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
           <div className="stat-label">Target: {targetWeightLbs || '---'} lbs</div>
         </div>
 
-        {/* Today's Calories (now shows remaining) */}
         <div className="stat-card calories-card">
           <div className="stat-card-header">
             <span className="stat-icon">🔥</span>
@@ -184,7 +187,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
                   maintenance
                     ? Math.min((consumed / maintenance) * 100, 100)
                     : 0
-                }%`
+                }%`,
               }}
             />
           </div>
@@ -193,7 +196,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-        {/* Macros */}
         <div className="stat-card macros-card">
           <div className="stat-card-header">
             <span className="stat-icon">📊</span>
@@ -234,15 +236,21 @@ function DashboardPage({ user, onBack, onNavigate }) {
               </div>
               <div className="tdee-row">
                 <span className="tdee-label">Maintenance</span>
-                <span className="tdee-value">{Math.round(tdeeData.maintenance_calories)} kcal</span>
+                <span className="tdee-value">
+                  {Math.round(tdeeData.maintenance_calories)} kcal
+                </span>
               </div>
               <div className="tdee-row">
                 <span className="tdee-label">Weight Loss</span>
-                <span className="tdee-value">{Math.round(tdeeData.weight_loss_calories)} kcal</span>
+                <span className="tdee-value">
+                  {Math.round(tdeeData.weight_loss_calories)} kcal
+                </span>
               </div>
               <div className="tdee-row">
                 <span className="tdee-label">Weight Gain</span>
-                <span className="tdee-value">{Math.round(tdeeData.weight_gain_calories)} kcal</span>
+                <span className="tdee-value">
+                  {Math.round(tdeeData.weight_gain_calories)} kcal
+                </span>
               </div>
             </div>
           ) : (
@@ -266,14 +274,18 @@ function DashboardPage({ user, onBack, onNavigate }) {
       <div className="activity-section">
         <div className="section-header">
           <h2>Recent Activity</h2>
-          <button className="view-all-btn" onClick={() => onNavigate('profile')}>View All →</button>
+          <button className="view-all-btn" onClick={() => onNavigate('profile')}>
+            View All →
+          </button>
         </div>
         <div className="activity-feed">
           {todaysNutrition?.meals_logged > 0 && (
             <div className="activity-item">
               <span className="activity-icon">🍽️</span>
               <div className="activity-content">
-                <p className="activity-title">Logged {todaysNutrition.meals_logged} meal(s) today</p>
+                <p className="activity-title">
+                  Logged {todaysNutrition.meals_logged} meal(s) today
+                </p>
                 <p className="activity-time">Today</p>
               </div>
             </div>
