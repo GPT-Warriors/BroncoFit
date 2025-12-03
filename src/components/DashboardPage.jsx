@@ -21,85 +21,72 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [
-        profileRes,
-        nutritionRes,
-        measurementRes,
-        latestWorkoutRes,
-        workoutsRes,
-      ] = await Promise.allSettled([
+      const [profileRes, nutritionRes] = await Promise.allSettled([
         apiService.getProfile(),
         apiService.getTodaysNutritionSummary(),
-        apiService.getLatestMeasurement(),
-        apiService.getLatestWorkout(),
-        apiService.getWorkouts(100, 0), 
       ]);
 
-      // --- HANDLE PROFILE & TDEE ---
-      if (profileRes.status === 'fulfilled' && profileRes.value) {
-        const p = profileRes.value;
-        setProfile(p);
+      const measurementsRes = await apiService.getMeasurements(1);
+      const latestMeas = measurementsRes && measurementsRes.length > 0 ? measurementsRes[0] : null;
+      setRecentMeasurement(latestMeas);
 
-        // Calculate TDEE if we have enough data
-        if (p.current_weight_kg && p.height_cm && p.age && p.sex && p.activity_level) {
-            try {
-                const tdee = await apiService.calculateTDEE({
-                    age: p.age,
-                    sex: p.sex,
-                    height_cm: p.height_cm,
-                    weight_kg: p.current_weight_kg,
-                    activity_level: p.activity_level,
-                });
-                setTdeeData(tdee);
-            } catch (err) {
-                console.warn("Failed to calc TDEE:", err);
-            }
+      // Handle Profile
+      let currentProfile = null;
+      if (profileRes.status === 'fulfilled') {
+        currentProfile = profileRes.value;
+        setProfile(currentProfile);
+      }
+
+      if (currentProfile) {
+        // Use measurement weight if available, otherwise profile weight
+        const weightForCalc = latestMeas?.weight_kg || currentProfile.current_weight_kg;
+
+        try {
+          const tdee = await apiService.calculateTDEE({
+            age: currentProfile.age,
+            sex: currentProfile.sex,
+            height_cm: currentProfile.height_cm,
+            weight_kg: weightForCalc, // <--- FIXED: Uses measured weight
+            activity_level: currentProfile.activity_level,
+          });
+          setTdeeData(tdee);
+        } catch (err) {
+          console.warn("Failed to calc TDEE:", err);
         }
       }
 
-      // --- HANDLE NUTRITION ---
+      // Handle Nutrition
       if (nutritionRes.status === 'fulfilled') {
         setTodaysNutrition(nutritionRes.value);
       }
 
-      // --- HANDLE MEASUREMENT ---
-      if (measurementRes.status === 'fulfilled') {
-        setRecentMeasurement(measurementRes.value);
-      }
-
-      // --- HANDLE WORKOUTS ---
+      // 4. Handle Workouts (Calendar + Latest)
+      const workoutsRes = await apiService.getWorkouts(100, 0); // Fetch enough for calendar
+      
       let rawWorkouts = [];
-      if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
-        rawWorkouts = workoutsRes.value;
+      if (workoutsRes && Array.isArray(workoutsRes)) {
+        rawWorkouts = workoutsRes;
       }
 
-      // Determine Latest Workout
-      let finalLatest = null;
-      if (latestWorkoutRes.status === 'fulfilled' && latestWorkoutRes.value) {
-        finalLatest = latestWorkoutRes.value;
-      } else if (rawWorkouts.length > 0) {
-        // Sort descending by date
+      // Determine Latest Workout (Sort by date descending)
+      if (rawWorkouts.length > 0) {
         const sorted = [...rawWorkouts].sort(
           (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
         );
-        finalLatest = sorted[0];
+        setLatestWorkout(sorted[0]);
       }
-      setLatestWorkout(finalLatest);
 
+      // Format for Calendar
       const formattedForCalendar = rawWorkouts.map((w) => {
-        // Handle potentially different date formats (ISO string vs Date object)
         const d = new Date(w.workout_date);
-        
-        // Format as MM/DD/YYYY
         const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 
         return {
-          id: w.id || w._id || Math.random(), 
+          id: w.id || w._id || Math.random(),
           title: w.workout_name,
-          date: mmddyyyy, 
+          date: mmddyyyy,
           duration: (w.duration_minutes || 0) + ' min',
           exercises: w.exercises?.length || 0,
-          // Create simple string details for the popup
           details: w.exercises?.map((ex) => {
               let str = ex.exercise_name || "Exercise";
               if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
@@ -128,13 +115,35 @@ function DashboardPage({ user, onBack, onNavigate }) {
     );
   }
 
-  const currentWeightLbs = kgToLbs(recentMeasurement?.weight_kg || profile?.current_weight_kg);
+  // --- Logic for Goal-Based TDEE Display ---
+  let targetCalories = tdeeData?.maintenance_calories || 0;
+  let goalLabel = "Maintenance";
+  
+  // Check user goal to display the CORRECT number
+  if (profile?.fitness_goal) {
+    if (profile.fitness_goal.includes('lose') || profile.fitness_goal.includes('cut')) {
+      targetCalories = tdeeData?.weight_loss_calories;
+      goalLabel = "Fat Loss Target";
+    } else if (profile.fitness_goal.includes('gain') || profile.fitness_goal.includes('bulk') || profile.fitness_goal.includes('muscle')) {
+      targetCalories = tdeeData?.weight_gain_calories;
+      goalLabel = "Bulking Target";
+    }
+  }
+
+  if (!targetCalories && tdeeData?.maintenance_calories) {
+      targetCalories = tdeeData.maintenance_calories;
+      goalLabel = "Maintenance";
+  }
+
+  const displayWeight = recentMeasurement?.weight_kg || profile?.current_weight_kg;
+  const currentWeightLbs = kgToLbs(displayWeight);
   const targetWeightLbs = kgToLbs(profile?.target_weight_kg);
 
   const consumed = todaysNutrition?.total_calories ?? 0;
-  const maintenance = tdeeData?.maintenance_calories ?? 0;
-  const remainingCalories = maintenance
-    ? Math.max(0, Math.round(maintenance - consumed))
+  // Use the GOAL calories for the progress bar, not always maintenance
+  const progressMax = targetCalories || 2000; 
+  const remainingCalories = targetCalories
+    ? Math.max(0, Math.round(targetCalories - consumed))
     : null;
 
   return (
@@ -200,16 +209,13 @@ function DashboardPage({ user, onBack, onNavigate }) {
             <div
               className="progress-fill"
               style={{
-                width: `${
-                  maintenance
-                    ? Math.min((consumed / maintenance) * 100, 100)
-                    : 0
-                }%`,
+                width: `${Math.min((consumed / progressMax) * 100, 100)}%`,
+                backgroundColor: consumed > progressMax ? '#ff4d4d' : undefined
               }}
             ></div>
           </div>
           <div className="stat-label">
-            Remaining: {maintenance ? remainingCalories : '---'} kcal
+            Remaining: {remainingCalories !== null ? remainingCalories : '---'} kcal
           </div>
         </div>
 
@@ -241,31 +247,20 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-        {/* TDEE Card */}
+        {/* TDEE / Goal Card - FIXED DISPLAY */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
-            <span className="stat-icon">📈</span>
-            <h3>TDEE</h3>
+            <span className="stat-icon">🎯</span>
+            <h3>Daily Target</h3>
           </div>
           {tdeeData ? (
-            <div className="tdee-summary">
-              <div className="tdee-row">
-                <span className="tdee-label">Maintenance</span>
-                <span className="tdee-value">
-                  {Math.round(tdeeData.maintenance_calories)}
-                </span>
+            <div className="tdee-summary single-goal">
+               <div className="stat-value-large">
+                {targetCalories ? Math.round(targetCalories) : '---'}
+                <span className="stat-unit">kcal</span>
               </div>
-              <div className="tdee-row">
-                <span className="tdee-label">Cut</span>
-                <span className="tdee-value">
-                  {Math.round(tdeeData.weight_loss_calories)}
-                </span>
-              </div>
-              <div className="tdee-row">
-                <span className="tdee-label">Bulk</span>
-                <span className="tdee-value">
-                  {Math.round(tdeeData.weight_gain_calories)}
-                </span>
+              <div className="stat-label">
+                Goal: {goalLabel}
               </div>
             </div>
           ) : (
