@@ -227,8 +227,8 @@ describe('DashboardPage', () => {
 
       expect(screen.getByRole('button', { name: /log workout/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /log meal/i })).toBeInTheDocument();
-      expect(screen.getByText(/exercises/i)).toBeInTheDocument();
-      expect(screen.getByText(/ai coach/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /exercises/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /ai coach/i })).toBeInTheDocument();
     });
 
     it('should navigate to workout log when clicked', async () => {
@@ -263,7 +263,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText(/exercises/i));
+      fireEvent.click(screen.getByRole('button', { name: /exercises/i }));
       expect(mockOnNavigate).toHaveBeenCalledWith('exercises');
     });
 
@@ -275,7 +275,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      fireEvent.click(screen.getByText(/ai coach/i));
+      fireEvent.click(screen.getByRole('button', { name: /ai coach/i }));
       expect(mockOnNavigate).toHaveBeenCalledWith('coach');
     });
   });

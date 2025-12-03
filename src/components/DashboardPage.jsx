@@ -245,28 +245,42 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-        {/* Latest Workout Card */}
+        {/* TDEE Card */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
-            <span className="stat-icon">💪</span>
-            <h3>Latest Workout</h3>
+            <span className="stat-icon">📈</span>
+            <h3>TDEE</h3>
           </div>
-          {latestWorkout ? (
-            <div className="workout-summary">
-              <div className="workout-name">{latestWorkout.workout_name}</div>
-              <div className="workout-details">
-                {latestWorkout.exercises?.length || 0} exercises •{' '}
-                {latestWorkout.duration_minutes || 0} min
+          {tdeeData ? (
+            <div className="tdee-summary">
+              <div className="tdee-row">
+                <span className="tdee-label">BMR</span>
+                <span className="tdee-value">{Math.round(tdeeData.bmr)} kcal</span>
               </div>
-              <div className="workout-date">
-                {new Date(latestWorkout.workout_date).toLocaleDateString()}
+              <div className="tdee-row">
+                <span className="tdee-label">Maintenance</span>
+                <span className="tdee-value">
+                  {Math.round(tdeeData.maintenance_calories)} kcal
+                </span>
+              </div>
+              <div className="tdee-row">
+                <span className="tdee-label">Weight Loss</span>
+                <span className="tdee-value">
+                  {Math.round(tdeeData.weight_loss_calories)} kcal
+                </span>
+              </div>
+              <div className="tdee-row">
+                <span className="tdee-label">Weight Gain</span>
+                <span className="tdee-value">
+                  {Math.round(tdeeData.weight_gain_calories)} kcal
+                </span>
               </div>
             </div>
           ) : (
             <div className="no-data">
-              <p>No workouts logged yet</p>
-              <button className="btn-small" onClick={() => onNavigate('workout-log')}>
-                Log Your First Workout
+              <p>TDEE not available</p>
+              <button className="btn-small" onClick={() => onNavigate('profile')}>
+                Update Profile
               </button>
             </div>
           )}
