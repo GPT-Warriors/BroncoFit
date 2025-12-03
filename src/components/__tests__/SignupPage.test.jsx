@@ -24,29 +24,41 @@ describe('StatsPage', () => {
   const mockUser = { id: '123', email: 'test@broncofit.com', name: 'Test User' };
 
   const mockProfile = {
-    id: '1', user_id: '123', age: 28, sex: 'male', height_cm: 178,
-    current_weight_kg: 80.8, target_weight_kg: 75.0, activity_level: 'moderate',
-    fitness_goal: 'lose_weight', updated_at: new Date().toISOString()
+    id: '1',
+    user_id: '123',
+    age: 28,
+    sex: 'male',
+    height_cm: 178,
+    current_weight_kg: 80.8,
+    target_weight_kg: 75.0,
+    activity_level: 'moderate',
+    fitness_goal: 'lose_weight',
+    updated_at: new Date().toISOString(),
   };
 
   const mockTDEE = {
-    bmr: 1850, maintenance_calories: 2400, weight_loss_calories: 1900, weight_gain_calories: 2900
+    bmr: 1850,
+    maintenance_calories: 2400,
+    weight_loss_calories: 1900,
+    weight_gain_calories: 2900,
   };
 
   const mockMeasurements = [
     { id: '3', user_id: '123', weight_kg: 80.8, measurement_date: new Date().toISOString() },
-    { id: '2', user_id: '123', weight_kg: 81.5, measurement_date: new Date(Date.now() - 7 * 86400000).toISOString() }
+    { id: '2', user_id: '123', weight_kg: 81.5, measurement_date: new Date(Date.now() - 7 * 86400000).toISOString() },
   ];
 
   const mockWorkouts = [
-    { id: 'w1', user_id: '123', workout_name: 'Upper Body', workout_date: new Date().toISOString() }
+    { id: 'w1', user_id: '123', workout_name: 'Upper Body', workout_date: new Date().toISOString() },
   ];
 
   const mockMeals = [
-    { id: 'm1', user_id: '123', meal_type: 'breakfast', meal_date: new Date().toISOString(), total_calories: 500 }
+    { id: 'm1', user_id: '123', meal_type: 'breakfast', meal_date: new Date().toISOString(), total_calories: 500 },
   ];
 
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   describe('Component Rendering', () => {
     it('should render stats page after loading', async () => {
@@ -75,7 +87,7 @@ describe('StatsPage', () => {
 
       const summaryCard = container.querySelector('.profile-summary-card');
       expect(summaryCard).toBeInTheDocument();
-      
+
       expect(screen.getByText(/maintenance \(tdee\)/i)).toBeInTheDocument();
       expect(screen.getByText(/2400 cal/i)).toBeInTheDocument();
 
@@ -84,7 +96,7 @@ describe('StatsPage', () => {
     });
   });
 
-  describe('Interactions (Inline Forms)', () => {
+  describe('Interactions (Modals)', () => {
     beforeEach(() => {
       apiService.getProfile.mockResolvedValue(mockProfile);
       apiService.getMeasurements.mockResolvedValue(mockMeasurements);
@@ -93,9 +105,9 @@ describe('StatsPage', () => {
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
     });
 
-    it('should submit new weight from inline form', async () => {
+    it('should open weight modal and submit new weight', async () => {
       apiService.addMeasurement.mockResolvedValue({ id: 'new', weight_kg: 85 });
-      
+
       render(<StatsPage user={mockUser} onBack={vi.fn()} />);
       await waitFor(() => expect(screen.queryByText(/loading/i)).not.toBeInTheDocument());
 
@@ -107,13 +119,11 @@ describe('StatsPage', () => {
 
       await waitFor(() => {
         expect(apiService.addMeasurement).toHaveBeenCalled();
-        // Confirms measurements are fetched again after saving
         expect(apiService.getMeasurements).toHaveBeenCalledTimes(2);
       });
     });
 
-    it('should update goals from inline goals form', async () => {
-      // Sets the update response to return a profile with the new goal
+    it('should open profile modal and update goals', async () => {
       apiService.updateProfile.mockResolvedValue({ ...mockProfile, fitness_goal: 'gain_muscle' });
 
       render(<StatsPage user={mockUser} onBack={vi.fn()} />);
@@ -126,7 +136,6 @@ describe('StatsPage', () => {
       fireEvent.click(updateButton);
 
       await waitFor(() => {
-        // Checks that profile update is called
         expect(apiService.updateProfile).toHaveBeenCalledTimes(1);
       });
     });
