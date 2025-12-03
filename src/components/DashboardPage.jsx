@@ -7,9 +7,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [todaysNutrition, setTodaysNutrition] = useState(null);
+  const [latestWorkout, setLatestWorkout] = useState(null);
   const [recentMeasurement, setRecentMeasurement] = useState(null);
   const [tdeeData, setTdeeData] = useState(null);
-  const [latestWorkout, setLatestWorkout] = useState(null);
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
 
   useEffect(() => {
@@ -47,27 +47,33 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
       // Profile + TDEE
       if (profileRes.status === 'fulfilled') {
-        setProfile(profileRes.value || null);
+        setProfile(profileRes.value);
 
         if (profileRes.value) {
-          const tdee = await apiService.calculateTDEE(profileRes.value);
-          setTdeeData(tdee || null);
+          const tdee = await apiService.calculateTDEE({
+            age: profileRes.value.age,
+            sex: profileRes.value.sex,
+            height_cm: profileRes.value.height_cm,
+            weight_kg: profileRes.value.current_weight_kg,
+            activity_level: profileRes.value.activity_level,
+          });
+          setTdeeData(tdee);
         }
       }
 
       // Nutrition
       if (nutritionRes.status === 'fulfilled') {
-        setTodaysNutrition(nutritionRes.value || null);
+        setTodaysNutrition(nutritionRes.value);
       }
 
-      // Measurements
+      // Measurement
       if (measurementRes.status === 'fulfilled') {
-        setRecentMeasurement(measurementRes.value || null);
+        setRecentMeasurement(measurementRes.value);
       }
 
-      // Latest workout
+      // Latest workout (single)
       if (latestWorkoutRes.status === 'fulfilled') {
-        setLatestWorkout(latestWorkoutRes.value || null);
+        setLatestWorkout(latestWorkoutRes.value);
       }
 
       // All workouts -> calendar + fallback latest
@@ -84,7 +90,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
         const formattedForCalendar = rawWorkouts.map((w) => {
           const d = new Date(w.workout_date);
           const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-
           return {
             id: w.id || w._id || Math.random(),
             title: w.workout_name,
@@ -95,9 +100,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
               w.exercises?.map((ex) => {
                 let str = ex.exercise_name;
                 if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
-                if (ex.weight_kg) {
-                  str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
-                }
+                if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
                 return str;
               }) || [],
           };
@@ -105,8 +108,8 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
         setCalendarWorkouts(formattedForCalendar);
       }
-    } catch (e) {
-      console.error('Error loading dashboard:', e);
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
     } finally {
       setLoading(false);
     }
@@ -128,19 +131,23 @@ function DashboardPage({ user, onBack, onNavigate }) {
       ? kgToLbs(recentMeasurement.weight_kg)
       : profile
       ? kgToLbs(profile.current_weight_kg)
-      : null;
+      : '---';
 
-  const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : null;
+  const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : '---';
 
-  // remaining calories = maintenance - consumed (never below 0)
   const consumed = todaysNutrition?.total_calories ?? 0;
   const maintenance = tdeeData?.maintenance_calories ?? 0;
-  const remainingCalories = Math.max(0, Math.round(maintenance - consumed));
+  const remainingCalories = maintenance
+    ? Math.max(0, Math.round(maintenance - consumed))
+    : null;
 
   return (
     <div className="dashboard-page">
-      <button className="back-button" onClick={onBack}>← Back</button>
+      <button className="back-button" onClick={onBack}>
+        ← Back
+      </button>
 
+      {/* Header */}
       <div className="dashboard-header">
         <div className="welcome-message">
           <h1>Welcome back, {user?.name?.split(' ')[0] || 'Champion'}! 💪</h1>
@@ -148,35 +155,42 @@ function DashboardPage({ user, onBack, onNavigate }) {
         </div>
         <div className="quick-actions">
           <button className="quick-action-btn primary" onClick={() => onNavigate('workout-log')}>
-            <span className="btn-icon">🏋️</span> Log Workout
+            <span className="btn-icon">🏋️</span>
+            Log Workout
           </button>
           <button className="quick-action-btn secondary" onClick={() => onNavigate('nutrition-log')}>
-            <span className="btn-icon">🍽️</span> Log Meal
+            <span className="btn-icon">🍽️</span>
+            Log Meal
           </button>
           <button className="quick-action-btn tertiary" onClick={() => onNavigate('exercises')}>
-            <span className="btn-icon">📚</span> Exercises
+            <span className="btn-icon">📚</span>
+            Exercises
           </button>
           <button className="quick-action-btn tertiary" onClick={() => onNavigate('coach')}>
-            <span className="btn-icon">🤖</span> AI Coach
+            <span className="btn-icon">🤖</span>
+            AI Coach
           </button>
         </div>
       </div>
 
+      {/* Stats Grid */}
       <div className="stats-grid-modern">
-        {/* Current Weight */}
+        {/* Current Weight Card */}
         <div className="stat-card weight-card">
           <div className="stat-card-header">
             <span className="stat-icon">⚖️</span>
             <h3>Current Weight</h3>
           </div>
           <div className="stat-value-large">
-            <span className="stat-number">{currentWeightLbs || '---'}</span>
+            {currentWeightLbs}
             <span className="stat-unit">lbs</span>
           </div>
-          <div className="stat-label">Target: {targetWeightLbs || '---'} lbs</div>
+          <div className="stat-label">
+            Target: {targetWeightLbs} lbs
+          </div>
         </div>
 
-        {/* Today's Calories (shows remaining) */}
+        {/* Calories Card */}
         <div className="stat-card calories-card">
           <div className="stat-card-header">
             <span className="stat-icon">🔥</span>
@@ -196,14 +210,14 @@ function DashboardPage({ user, onBack, onNavigate }) {
                     : 0
                 }%`,
               }}
-            />
+            ></div>
           </div>
           <div className="stat-label">
             Remaining: {maintenance ? remainingCalories : '---'} kcal
           </div>
         </div>
 
-        {/* Macros */}
+        {/* Macros Card */}
         <div className="stat-card macros-card">
           <div className="stat-card-header">
             <span className="stat-icon">📊</span>
@@ -231,48 +245,35 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-        {/* TDEE */}
+        {/* Latest Workout Card */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
-            <span className="stat-icon">📈</span>
-            <h3>TDEE</h3>
+            <span className="stat-icon">💪</span>
+            <h3>Latest Workout</h3>
           </div>
-          {tdeeData ? (
-            <div className="tdee-summary">
-              <div className="tdee-row">
-                <span className="tdee-label">BMR</span>
-                <span className="tdee-value">{Math.round(tdeeData.bmr)} kcal</span>
+          {latestWorkout ? (
+            <div className="workout-summary">
+              <div className="workout-name">{latestWorkout.workout_name}</div>
+              <div className="workout-details">
+                {latestWorkout.exercises?.length || 0} exercises •{' '}
+                {latestWorkout.duration_minutes || 0} min
               </div>
-              <div className="tdee-row">
-                <span className="tdee-label">Maintenance</span>
-                <span className="tdee-value">
-                  {Math.round(tdeeData.maintenance_calories)} kcal
-                </span>
-              </div>
-              <div className="tdee-row">
-                <span className="tdee-label">Weight Loss</span>
-                <span className="tdee-value">
-                  {Math.round(tdeeData.weight_loss_calories)} kcal
-                </span>
-              </div>
-              <div className="tdee-row">
-                <span className="tdee-label">Weight Gain</span>
-                <span className="tdee-value">
-                  {Math.round(tdeeData.weight_gain_calories)} kcal
-                </span>
+              <div className="workout-date">
+                {new Date(latestWorkout.workout_date).toLocaleDateString()}
               </div>
             </div>
           ) : (
             <div className="no-data">
-              <p>TDEE not available</p>
-              <button className="btn-small" onClick={() => onNavigate('profile')}>
-                Update Profile
+              <p>No workouts logged yet</p>
+              <button className="btn-small" onClick={() => onNavigate('workout-log')}>
+                Log Your First Workout
               </button>
             </div>
           )}
         </div>
       </div>
 
+      {/* Workout History Calendar */}
       <div className="calendar-section" style={{ marginTop: '32px', marginBottom: '32px' }}>
         <div className="section-header" style={{ marginBottom: '16px' }}>
           <h2>Workout History</h2>
@@ -280,6 +281,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
         <WorkoutCalendar workouts={calendarWorkouts} />
       </div>
 
+      {/* Activity Section */}
       <div className="activity-section">
         <div className="section-header">
           <h2>Recent Activity</h2>
@@ -287,6 +289,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
             View All →
           </button>
         </div>
+
         <div className="activity-feed">
           {todaysNutrition?.meals_logged > 0 && (
             <div className="activity-item">
