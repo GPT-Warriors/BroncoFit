@@ -1,0 +1,399 @@
+/* Macro Recommendations - Modern Dark Theme */
+
+.macro-recommendations {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient accent */
+.macro-recommendations::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e676, #FFD700, #FFA500);
+}
+
+/* Header */
+.recommendations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.recommendations-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recommendations-header .icon {
+  font-size: 1.75rem;
+  filter: none;
+  -webkit-text-fill-color: initial;
+}
+
+.goal-badge {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(238, 201, 125, 0.1));
+  border: 1px solid var(--accent-green);
+  border-radius: var(--radius-pill);
+  color: var(--accent-green);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Macro Grid */
+.macro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.macro-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.macro-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.macro-card.calories {
+  border-color: rgba(255, 215, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), transparent);
+}
+
+.macro-card.protein {
+  border-color: rgba(0, 230, 118, 0.3);
+  background: linear-gradient(135deg, rgba(0, 230, 118, 0.05), transparent);
+}
+
+.macro-card.carbs {
+  border-color: rgba(52, 152, 219, 0.3);
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.05), transparent);
+}
+
+.macro-card.fat {
+  border-color: rgba(255, 165, 0, 0.3);
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.05), transparent);
+}
+
+/* Macro Header */
+.macro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.macro-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.macro-icon {
+  font-size: 1.25rem;
+}
+
+/* Macro Values */
+.macro-values {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.macro-values .current {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.macro-values .divider {
+  color: var(--text-muted);
+  font-size: 1.25rem;
+}
+
+.macro-values .target {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.macro-card.calories .current {
+  color: #FFD700;
+}
+
+.macro-card.protein .current {
+  color: #00e676;
+}
+
+.macro-card.carbs .current {
+  color: #5DADE2;
+}
+
+.macro-card.fat .current {
+  color: #FFA500;
+}
+
+/* Progress Bar */
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.calories-fill {
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.protein-fill {
+  background: linear-gradient(90deg, #00e676, #00ff88);
+  box-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+}
+
+.carbs-fill {
+  background: linear-gradient(90deg, #5DADE2, #3498DB);
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+
+.fat-fill {
+  background: linear-gradient(90deg, #FFA500, #FF8C00);
+  box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
+}
+
+/* Remaining/Info */
+.remaining {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.macro-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.macro-percent {
+  font-weight: 600;
+}
+
+.macro-cal {
+  opacity: 0.8;
+}
+
+/* Distribution Chart */
+.macro-distribution {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.macro-distribution h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.distribution-bar {
+  display: flex;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.distribution-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #000;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.distribution-segment span {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.distribution-segment:hover {
+  filter: brightness(1.1);
+}
+
+.protein-segment {
+  background: linear-gradient(135deg, #00e676, #00cc6f);
+}
+
+.carbs-segment {
+  background: linear-gradient(135deg, #5DADE2, #3498DB);
+}
+
+.fat-segment {
+  background: linear-gradient(135deg, #FFA500, #FF8C00);
+}
+
+/* Tips Section */
+.macro-tips {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(238, 201, 125, 0.05));
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.macro-tips h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-green);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.macro-tips ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.macro-tips li {
+  padding: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.macro-tips li:last-child {
+  border-bottom: none;
+}
+
+/* No Recommendations State */
+.no-recommendations {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+}
+
+.no-recommendations p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .macro-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .macro-recommendations {
+    padding: 1.5rem;
+  }
+
+  .recommendations-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .macro-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .macro-values .current {
+    font-size: 1.5rem;
+  }
+
+  .macro-values .target {
+    font-size: 1.1rem;
+  }
+
+  .distribution-segment span {
+    font-size: 0.75rem;
+  }
+}
+
+/* Animation */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.macro-recommendations {
+  animation: fadeIn 0.5s ease-out;
+}

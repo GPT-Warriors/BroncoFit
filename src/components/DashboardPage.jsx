@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiService from '../services/api';
 import WorkoutCalendar from './WorkoutCalendar';
+import FoodCalendar from './FoodCalendar';  // ✅ NEW IMPORT
 import './DashboardPage.css';
 
 const GOAL_OFFSETS = [250, 500, 750, 1000];
@@ -14,6 +15,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [recentMeasurement, setRecentMeasurement] = useState(null);
   const [tdeeData, setTdeeData] = useState(null);
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
+  const [calendarMeals, setCalendarMeals] = useState([]);  // ✅ NEW STATE
 
   useEffect(() => {
     loadDashboardData();
@@ -41,7 +43,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
       }
 
       if (currentProfile) {
-        // Use measurement weight if available, otherwise profile weight
         const weightForCalc = latestMeas?.weight_kg || currentProfile.current_weight_kg;
 
         try {
@@ -49,7 +50,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
             age: currentProfile.age,
             sex: currentProfile.sex,
             height_cm: currentProfile.height_cm,
-            weight_kg: weightForCalc, // <--- FIXED: Uses measured weight
+            weight_kg: weightForCalc,
             activity_level: currentProfile.activity_level,
           });
           setTdeeData(tdee);
@@ -63,15 +64,14 @@ function DashboardPage({ user, onBack, onNavigate }) {
         setTodaysNutrition(nutritionRes.value);
       }
 
-      // 4. Handle Workouts (Calendar + Latest)
-      const workoutsRes = await apiService.getWorkouts(100, 0); // Fetch enough for calendar
-      
+      // Handle Workouts (Calendar + Latest)
+      const workoutsRes = await apiService.getWorkouts(100, 0);
+
       let rawWorkouts = [];
       if (workoutsRes && Array.isArray(workoutsRes)) {
         rawWorkouts = workoutsRes;
       }
 
-      // Determine Latest Workout (Sort by date descending)
       if (rawWorkouts.length > 0) {
         const sorted = [...rawWorkouts].sort(
           (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
@@ -99,6 +99,12 @@ function DashboardPage({ user, onBack, onNavigate }) {
       });
 
       setCalendarWorkouts(formattedForCalendar);
+
+      // ✅ NEW: Load meals for food calendar
+      const mealsRes = await apiService.getMeals(100);
+      if (mealsRes && Array.isArray(mealsRes)) {
+        setCalendarMeals(mealsRes);
+      }
 
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -197,6 +203,11 @@ function DashboardPage({ user, onBack, onNavigate }) {
             <span className="btn-icon">🤖</span>
             AI Coach
           </button>
+          {/* ✅ NEW: Macro Recommendations Button */}
+          <button className="quick-action-btn tertiary" onClick={() => onNavigate('macros')}>
+            <span className="btn-icon">🎯</span>
+            Macros
+          </button>
         </div>
       </div>
 
@@ -269,7 +280,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-        {/* TDEE / Goal Card - FIXED DISPLAY */}
+        {/* TDEE / Goal Card */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
             <span className="stat-icon">🎯</span>
@@ -302,6 +313,14 @@ function DashboardPage({ user, onBack, onNavigate }) {
           <h2>Workout History</h2>
         </div>
         <WorkoutCalendar workouts={calendarWorkouts} />
+      </div>
+
+      {/* ✅ NEW: Food Calendar Section */}
+      <div className="calendar-section" style={{ marginTop: '32px', marginBottom: '32px' }}>
+        <div className="section-header" style={{ marginBottom: '16px' }}>
+          <h2>Nutrition History</h2>
+        </div>
+        <FoodCalendar meals={calendarMeals} />
       </div>
 
       {/* Activity Section */}

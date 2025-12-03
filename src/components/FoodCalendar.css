@@ -1,0 +1,263 @@
+/* Food Calendar - Inherits base styles from WorkoutCalendar.css */
+
+.food-calendar {
+  margin-top: 32px;
+}
+
+/* Meal indicator inside calendar days */
+.meal-indicator {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #000;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.meal-count {
+  color: #1e1e1e;
+  font-weight: 700;
+}
+
+/* Calorie intensity coloring for calendar days */
+.calendar-day.low-cal {
+  background-color: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.calendar-day.med-cal {
+  background-color: rgba(255, 165, 0, 0.15);
+  border: 1px solid rgba(255, 165, 0, 0.4);
+}
+
+.calendar-day.high-cal {
+  background-color: rgba(255, 69, 0, 0.15);
+  border: 1px solid rgba(255, 69, 0, 0.4);
+}
+
+.calendar-day.has-meals {
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.calendar-day.has-meals .day-number {
+  color: #FFD700;
+}
+
+.calendar-day.has-meals:hover {
+  background-color: rgba(255, 215, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+/* Daily Summary */
+.daily-summary {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.05));
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  margin-bottom: 20px;
+}
+
+.summary-item {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-item.calories {
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.summary-item.protein {
+  border-color: rgba(0, 230, 118, 0.3);
+}
+
+.summary-item.carbs {
+  border-color: rgba(52, 152, 219, 0.3);
+}
+
+.summary-item.fat {
+  border-color: rgba(255, 165, 0, 0.3);
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.summary-item.calories .summary-value {
+  color: #FFD700;
+}
+
+.summary-item.protein .summary-value {
+  color: #00e676;
+}
+
+.summary-item.carbs .summary-value {
+  color: #5DADE2;
+}
+
+.summary-item.fat .summary-value {
+  color: #FFA500;
+}
+
+/* Meal List */
+.meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meal-card {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.meal-card:hover {
+  border-color: #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.meal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.meal-card-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meal-calories {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.meal-foods {
+  margin-bottom: 12px;
+}
+
+.meal-meta {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin: 0 0 8px 0;
+}
+
+/* Macro badges */
+.meal-macros {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.macro-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.macro-badge.protein {
+  background: rgba(0, 230, 118, 0.1);
+  color: #00e676;
+  border-color: rgba(0, 230, 118, 0.3);
+}
+
+.macro-badge.carbs {
+  background: rgba(52, 152, 219, 0.1);
+  color: #5DADE2;
+  border-color: rgba(52, 152, 219, 0.3);
+}
+
+.macro-badge.fat {
+  background: rgba(255, 165, 0, 0.1);
+  color: #FFA500;
+  border-color: rgba(255, 165, 0, 0.3);
+}
+
+/* Food item pills */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  background: rgba(255, 215, 0, 0.1);
+  color: #FFD700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.pill.italic {
+  font-style: italic;
+  border: none;
+  background: none;
+  color: #FFD700;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .daily-summary {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .meal-macros {
+    flex-wrap: wrap;
+  }
+
+  .calendar-day {
+    aspect-ratio: auto;
+    height: 50px;
+  }
+
+  .meal-indicator {
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+  }
+}
