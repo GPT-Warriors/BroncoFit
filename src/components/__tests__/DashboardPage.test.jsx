@@ -15,14 +15,14 @@ vi.mock('../../services/api', () => ({
     getLatestMeasurement: vi.fn(),
     getLatestWorkout: vi.fn(),
     calculateTDEE: vi.fn(),
-  }
+  },
 }));
 
 describe('DashboardPage', () => {
   const mockUser = {
     id: '123',
     email: 'test@broncofit.com',
-    name: 'Test User'
+    name: 'Test User',
   };
 
   const mockProfile = {
@@ -35,14 +35,14 @@ describe('DashboardPage', () => {
     target_weight_kg: 75.0,
     activity_level: 'moderate',
     fitness_goal: 'lose_weight',
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   const mockTDEE = {
     bmr: 1850,
     maintenance_calories: 2400,
     weight_loss_calories: 1900,
-    weight_gain_calories: 2900
+    weight_gain_calories: 2900,
   };
 
   const mockNutrition = {
@@ -50,14 +50,14 @@ describe('DashboardPage', () => {
     total_protein_g: 120,
     total_carbs_g: 200,
     total_fat_g: 60,
-    meals_logged: 3
+    meals_logged: 3,
   };
 
   const mockMeasurement = {
     id: '1',
     user_id: '123',
     weight_kg: 80.8,
-    measurement_date: new Date().toISOString()
+    measurement_date: new Date().toISOString(),
   };
 
   const mockWorkout = {
@@ -66,9 +66,7 @@ describe('DashboardPage', () => {
     workout_name: 'Upper Body Strength',
     workout_date: new Date().toISOString(),
     duration_minutes: 60,
-    exercises: [
-      { exercise_name: 'Bench Press', sets: 3, reps: 10 }
-    ]
+    exercises: [{ exercise_name: 'Bench Press', sets: 3, reps: 10 }],
   };
 
   beforeEach(() => {
@@ -124,7 +122,7 @@ describe('DashboardPage', () => {
   });
 
   describe('Stats Cards', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       apiService.getProfile.mockResolvedValue(mockProfile);
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
@@ -139,7 +137,13 @@ describe('DashboardPage', () => {
       });
 
       expect(screen.getByText(/current weight/i)).toBeInTheDocument();
-      expect(screen.getByText(/178\.1 lbs/i)).toBeInTheDocument();
+
+      // Weight number and unit are separate spans now
+      expect(screen.getByText('178.1')).toBeInTheDocument();
+      // At least one "lbs" unit should exist on the page
+      expect(screen.getAllByText('lbs')[0]).toBeInTheDocument();
+
+      // Target text remains combined
       expect(screen.getByText(/target: 165\.3 lbs/i)).toBeInTheDocument();
     });
 
@@ -196,7 +200,7 @@ describe('DashboardPage', () => {
   });
 
   describe('Quick Actions', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       apiService.getProfile.mockResolvedValue(mockProfile);
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
@@ -224,9 +228,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      const workoutButton = screen.getByRole('button', { name: /log workout/i });
-      fireEvent.click(workoutButton);
-
+      fireEvent.click(screen.getByRole('button', { name: /log workout/i }));
       expect(mockOnNavigate).toHaveBeenCalledWith('workout-log');
     });
 
@@ -238,9 +240,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      const mealButton = screen.getByRole('button', { name: /log meal/i });
-      fireEvent.click(mealButton);
-
+      fireEvent.click(screen.getByRole('button', { name: /log meal/i }));
       expect(mockOnNavigate).toHaveBeenCalledWith('nutrition-log');
     });
 
@@ -252,9 +252,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      const exercisesButton = screen.getByText(/exercises/i);
-      fireEvent.click(exercisesButton);
-
+      fireEvent.click(screen.getByText(/exercises/i));
       expect(mockOnNavigate).toHaveBeenCalledWith('exercises');
     });
 
@@ -266,15 +264,13 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      const coachButton = screen.getByText(/ai coach/i);
-      fireEvent.click(coachButton);
-
+      fireEvent.click(screen.getByText(/ai coach/i));
       expect(mockOnNavigate).toHaveBeenCalledWith('coach');
     });
   });
 
   describe('Recent Activity', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       apiService.getProfile.mockResolvedValue(mockProfile);
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
@@ -294,7 +290,6 @@ describe('DashboardPage', () => {
 
     it('should display meal activity when meals logged', async () => {
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
-
       await waitFor(() => {
         expect(screen.getByText(/logged 3 meal/i)).toBeInTheDocument();
       });
@@ -302,9 +297,7 @@ describe('DashboardPage', () => {
 
     it('should display workout activity when workout exists', async () => {
       apiService.getLatestWorkout.mockResolvedValue(mockWorkout);
-
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
-
       await waitFor(() => {
         expect(screen.getByText(/completed upper body strength/i)).toBeInTheDocument();
       });
@@ -312,7 +305,6 @@ describe('DashboardPage', () => {
 
     it('should display measurement activity when measurement exists', async () => {
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
-
       await waitFor(() => {
         expect(screen.getByText(/updated weight to 178\.1 lbs/i)).toBeInTheDocument();
       });
@@ -340,9 +332,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      const viewAllButton = screen.getByText(/view all/i);
-      fireEvent.click(viewAllButton);
-
+      fireEvent.click(screen.getByText(/view all/i));
       expect(mockOnNavigate).toHaveBeenCalledWith('profile');
     });
   });
@@ -375,7 +365,6 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      // Should render without crashing
       expect(screen.getByText(/welcome back/i)).toBeInTheDocument();
     });
 
@@ -391,7 +380,6 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      // Should render with placeholder values
       const placeholders = screen.getAllByText(/---/i);
       expect(placeholders.length).toBeGreaterThan(0);
     });
@@ -410,7 +398,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      // 80.8 kg ≈ 178.1 lbs
+      // Weight number and unit rendered separately
       expect(screen.getByText('178.1')).toBeInTheDocument();
       expect(screen.getAllByText('lbs')[0]).toBeInTheDocument();
     });
@@ -442,9 +430,7 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      // Should still show weight from profile
       expect(screen.getByText('178.1')).toBeInTheDocument();
     });
   });
 });
-
