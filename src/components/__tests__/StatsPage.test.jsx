@@ -1,7 +1,4 @@
 // StatsPage.test.jsx
-/**
- * Tests how the StatsPage component behaves
- */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';

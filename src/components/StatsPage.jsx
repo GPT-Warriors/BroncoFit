@@ -164,18 +164,18 @@ function StatsPage({ onBack }) {
 
   let goalCalories = 0;
   let goalLabel = 'Target';
-  let goalIntensityLabel = 'Select rate based on your goal';
 
   if (profile && tdeeData) {
     const goal = (profile.fitness_goal || 'maintain').toLowerCase();
     const maintenance = tdeeData.maintenance_calories || 0;
-    const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
     let adjustment = 0;
 
     if (goal.includes('lose') || goal.includes('cut')) {
+      const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
       adjustment = -offset;
       goalLabel = 'Target (Cut)';
     } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
+      const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
       adjustment = offset;
       goalLabel = 'Target (Bulk)';
     } else {
@@ -184,17 +184,6 @@ function StatsPage({ onBack }) {
     }
 
     goalCalories = Math.round(maintenance + adjustment);
-
-    if (adjustment === 0) {
-      goalIntensityLabel = 'Maintain (0 lb/week)';
-    } else {
-      const rateLbsPerWeek = offset / 500;
-      if (adjustment < 0) {
-        goalIntensityLabel = `Cut (${rateLbsPerWeek} lb/week)`;
-      } else {
-        goalIntensityLabel = `Bulk (${rateLbsPerWeek} lb/week)`;
-      }
-    }
   }
 
   if (!goalCalories && tdeeData?.maintenance_calories && goalLabel === 'Target (Maintain)') {
@@ -210,6 +199,28 @@ function StatsPage({ onBack }) {
       </div>
     );
   }
+
+  const renderGoalIntensitySelect = () => {
+    if (editGoal === 'maintain') return null;
+
+    const prefix = editGoal === 'lose_weight' ? 'Cut' : 'Bulk';
+
+    return (
+      <div className="quick-form-group goal-intensity-group">
+        <label htmlFor="goal-intensity-select">Goal Intensity</label>
+        <select
+          id="goal-intensity-select"
+          value={goalIntensityIndex}
+          onChange={(e) => setGoalIntensityIndex(parseInt(e.target.value, 10))}
+        >
+          <option value={0}>{`${prefix} (0.5 lb/week)`}</option>
+          <option value={1}>{`${prefix} (1.0 lb/week)`}</option>
+          <option value={2}>{`${prefix} (1.5 lb/week)`}</option>
+          <option value={3}>{`${prefix} (2.0 lb/week)`}</option>
+        </select>
+      </div>
+    );
+  };
 
   return (
     <div className="stats-page">
@@ -279,20 +290,7 @@ function StatsPage({ onBack }) {
               </div>
             </div>
 
-            <div className="quick-form-group goal-intensity-group">
-              <label htmlFor="goal-intensity-range">Goal Intensity</label>
-              <input
-                id="goal-intensity-range"
-                className="goal-intensity-slider"
-                type="range"
-                min="0"
-                max="3"
-                step="1"
-                value={goalIntensityIndex}
-                onChange={(e) => setGoalIntensityIndex(parseInt(e.target.value, 10))}
-              />
-              <div className="goal-intensity-label">{goalIntensityLabel}</div>
-            </div>
+            {renderGoalIntensitySelect()}
 
             <div className="quick-form-actions">
               <button type="submit" className="btn-secondary">
