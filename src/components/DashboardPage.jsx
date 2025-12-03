@@ -7,191 +7,94 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [todaysNutrition, setTodaysNutrition] = useState(null);
-  const [latestWorkout, setLatestWorkout] = useState(null);
   const [recentMeasurement, setRecentMeasurement] = useState(null);
   const [tdeeData, setTdeeData] = useState(null);
+  const [latestWorkout, setLatestWorkout] = useState(null); 
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
-
-  const kgToLbs = (kg) => {
-    const n = Number(kg);
-    return Number.isFinite(n) ? (n * 2.20462).toFixed(1) : '---';
-  };
-
-  const coerceNum = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  };
-
-  // Normalize measurement from backend
-  const normalizeMeasurement = (m) => {
-    if (!m) return null;
-    return {
-      weight_kg: m.weight_kg ?? m.weight ?? m.body_weight_kg ?? null,
-      measurement_date: m.measurement_date ?? m.date ?? m.created_at ?? null,
-    };
-  };
-
-  // Normalize nutrition summary
-  const normalizeNutrition = (n) => {
-    if (!n) return null;
-
-    // Some backends return {total_*}, others {calories, protein_g, ...}, others nest under .today or .summary
-    const src =
-      n.summary ??
-      n.today ??
-      n;
-
-    const total_calories =
-      coerceNum(src.total_calories ?? src.calories ?? src.kcal ?? 0);
-
-    const total_protein_g =
-      coerceNum(src.total_protein_g ?? src.protein_g ?? src.protein ?? 0);
-
-    const total_carbs_g =
-      coerceNum(src.total_carbs_g ?? src.carbs_g ?? src.carbs ?? 0);
-
-    const total_fat_g =
-      coerceNum(src.total_fat_g ?? src.fat_g ?? src.fat ?? 0);
-
-    const meals_logged = coerceNum(
-      src.meals_logged ??
-        src.meal_count ??
-        (Array.isArray(src.meals) ? src.meals.length : 0)
-    );
-
-    return {
-      total_calories,
-      total_protein_g,
-      total_carbs_g,
-      total_fat_g,
-      meals_logged,
-    };
-  };
-
-  // Normalize workout
-  const normalizeWorkout = (w) => {
-    if (!w) return null;
-    const dateRaw =
-      w.workout_date ?? w.date ?? w.started_at ?? w.created_at ?? null;
-
-    // Accept different name keys
-    const name =
-      w.workout_name ?? w.name ?? w.title ?? 'Workout';
-
-    const duration =
-      coerceNum(w.duration_minutes ?? w.duration ?? w.length_minutes ?? 0);
-
-    const exercises = Array.isArray(w.exercises)
-      ? w.exercises
-      : Array.isArray(w.movements)
-      ? w.movements
-      : [];
-
-    return {
-      id: w.id ?? w._id ?? Math.random(),
-      workout_name: name,
-      workout_date: dateRaw ? new Date(dateRaw).toISOString() : new Date().toISOString(),
-      duration_minutes: duration,
-      exercises,
-    };
-  };
-
-  // Map a normalized workout to your calendar event shape
-  const toCalendarEvent = (w) => {
-    const d = new Date(w.workout_date);
-    const date = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-    return {
-      id: w.id,
-      title: w.workout_name,
-      date,
-      duration: `${w.duration_minutes || 0} min`,
-      exercises: w.exercises?.length || 0,
-      details:
-        w.exercises?.map((ex) => {
-          const n = ex.exercise_name ?? ex.name ?? ex.title ?? 'Exercise';
-          const sets = ex.sets ?? ex.num_sets;
-          const reps = ex.reps ?? ex.num_reps;
-          const weightKg = ex.weight_kg ?? ex.weight ?? null;
-          let s = n;
-          if (sets && reps) s += ` (${sets}×${reps})`;
-          if (weightKg) s += ` @ ${(Number(weightKg) * 2.20462).toFixed(1)}lbs`;
-          return s;
-        }) ?? [],
-    };
-  };
 
   useEffect(() => {
     loadDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
 
   const loadDashboardData = async () => {
     setLoading(true);
     try {
       const getLatestWorkoutSafe =
         typeof apiService.getLatestWorkout === 'function'
-          ? apiService.getLatestWorkout()
-          : Promise.resolve(null);
+          ? apiService.getLatestWorkout
+          : async () => null;
 
       const getWorkoutsSafe =
         typeof apiService.getWorkouts === 'function'
-          ? apiService.getWorkouts()
-          : Promise.resolve([]);
+          ? apiService.getWorkouts
+          : async () => [];
 
       const [
         profileRes,
         nutritionRes,
         measurementRes,
         latestWorkoutRes,
-        workoutsRes,
+        workoutsRes
       ] = await Promise.allSettled([
         apiService.getProfile(),
         apiService.getTodaysNutritionSummary(),
         apiService.getLatestMeasurement(),
-        getLatestWorkoutSafe,
-        getWorkoutsSafe,
+        getLatestWorkoutSafe(),
+        getWorkoutsSafe()
       ]);
 
       if (profileRes.status === 'fulfilled') {
-        const prof = profileRes.value || null;
-        setProfile(prof);
-        if (prof) {
-          try {
-            const tdee = await apiService.calculateTDEE(prof);
-            setTdeeData(tdee || null);
-          } catch {
-            setTdeeData(null);
-          }
+        setProfile(profileRes.value || null);
+        if (profileRes.value) {
+          const tdee = await apiService.calculateTDEE(profileRes.value);
+          setTdeeData(tdee || null);
         }
       }
 
       if (nutritionRes.status === 'fulfilled') {
-        setTodaysNutrition(normalizeNutrition(nutritionRes.value));
+        setTodaysNutrition(nutritionRes.value || null);
       }
 
       if (measurementRes.status === 'fulfilled') {
-        setRecentMeasurement(normalizeMeasurement(measurementRes.value));
+        setRecentMeasurement(measurementRes.value || null);
       }
 
-      let latestW = null;
-
-      if (latestWorkoutRes.status === 'fulfilled' && latestWorkoutRes.value) {
-        latestW = normalizeWorkout(latestWorkoutRes.value);
+      if (latestWorkoutRes.status === 'fulfilled') {
+        setLatestWorkout(latestWorkoutRes.value || null);
       }
 
-      let list = [];
       if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
-        list = workoutsRes.value.map(normalizeWorkout).filter(Boolean);
+        const rawWorkouts = workoutsRes.value;
 
-        if (!latestW && list.length > 0) {
-          list.sort((a, b) => new Date(b.workout_date) - new Date(a.workout_date));
-          latestW = list[0];
+        if ((!latestWorkoutRes || latestWorkoutRes.status !== 'fulfilled') && rawWorkouts.length > 0) {
+          const sorted = [...rawWorkouts].sort(
+            (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
+          );
+          setLatestWorkout(sorted[0]);
         }
 
-        setCalendarWorkouts(list.map(toCalendarEvent));
+        const formattedForCalendar = rawWorkouts.map((w) => {
+          const d = new Date(w.workout_date);
+          const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+          return {
+            id: w.id || w._id || Math.random(),
+            title: w.workout_name,
+            date: mmddyyyy,
+            duration: (w.duration_minutes || 0) + ' min',
+            exercises: w.exercises?.length || 0,
+            details:
+              w.exercises?.map((ex) => {
+                let str = ex.exercise_name;
+                if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
+                if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
+                return str;
+              }) || []
+          };
+        });
+        setCalendarWorkouts(formattedForCalendar);
       }
-
-      setLatestWorkout(latestW);
     } catch (e) {
       console.error('Error loading dashboard:', e);
     } finally {
@@ -203,7 +106,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
     return (
       <div className="dashboard-page">
         <div className="dashboard-loading">
-          <div className="loading-spinner" />
+          <div className="loading-spinner"></div>
           <p>Loading your dashboard...</p>
         </div>
       </div>
@@ -211,18 +114,18 @@ function DashboardPage({ user, onBack, onNavigate }) {
   }
 
   const currentWeightLbs =
-    recentMeasurement?.weight_kg != null
+    recentMeasurement
       ? kgToLbs(recentMeasurement.weight_kg)
-      : profile?.current_weight_kg != null
+      : profile
       ? kgToLbs(profile.current_weight_kg)
-      : '---';
+      : null;
 
-  const targetWeightLbs =
-    profile?.target_weight_kg != null ? kgToLbs(profile.target_weight_kg) : '---';
+  const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : null;
 
-  const caloriesNow = todaysNutrition?.total_calories ?? 0;
-  const tdeeGoal = tdeeData?.maintenance_calories ?? 0;
-  const progressPct = tdeeGoal ? Math.min((caloriesNow / tdeeGoal) * 100, 100) : 0;
+  //remaining calories = maintenance - consumed (never below 0)
+  const consumed = todaysNutrition?.total_calories ?? 0;
+  const maintenance = tdeeData?.maintenance_calories ?? 0;
+  const remainingCalories = Math.max(0, Math.round(maintenance - consumed));
 
   return (
     <div className="dashboard-page">
@@ -250,35 +153,47 @@ function DashboardPage({ user, onBack, onNavigate }) {
       </div>
 
       <div className="stats-grid-modern">
+        {/* Current Weight */}
         <div className="stat-card weight-card">
           <div className="stat-card-header">
             <span className="stat-icon">⚖️</span>
             <h3>Current Weight</h3>
           </div>
           <div className="stat-value-large">
-            <span className="stat-number">{currentWeightLbs}</span>
+            <span className="stat-number">{currentWeightLbs || '---'}</span>
             <span className="stat-unit">lbs</span>
           </div>
-          <div className="stat-label">Target: {targetWeightLbs} lbs</div>
+          <div className="stat-label">Target: {targetWeightLbs || '---'} lbs</div>
         </div>
 
+        {/* Today's Calories (now shows remaining) */}
         <div className="stat-card calories-card">
           <div className="stat-card-header">
             <span className="stat-icon">🔥</span>
             <h3>Today&apos;s Calories</h3>
           </div>
           <div className="stat-value-large">
-            {Math.round(caloriesNow)}
+            {(todaysNutrition?.total_calories ?? 0).toFixed(0)}
             <span className="stat-unit">kcal</span>
           </div>
           <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${progressPct}%` }} />
+            <div
+              className="progress-fill"
+              style={{
+                width: `${
+                  maintenance
+                    ? Math.min((consumed / maintenance) * 100, 100)
+                    : 0
+                }%`
+              }}
+            />
           </div>
           <div className="stat-label">
-            Goal: {tdeeGoal ? Math.round(tdeeGoal) : '---'} kcal
+            Remaining: {maintenance ? remainingCalories : '---'} kcal
           </div>
         </div>
 
+        {/* Macros */}
         <div className="stat-card macros-card">
           <div className="stat-card-header">
             <span className="stat-icon">📊</span>
@@ -287,39 +202,54 @@ function DashboardPage({ user, onBack, onNavigate }) {
           <div className="macros-breakdown">
             <div className="macro-item">
               <span className="macro-label">Protein</span>
-              <span className="macro-value">{Math.round(todaysNutrition?.total_protein_g ?? 0)}g</span>
+              <span className="macro-value">
+                {todaysNutrition?.total_protein_g?.toFixed(0) || 0}g
+              </span>
             </div>
             <div className="macro-item">
               <span className="macro-label">Carbs</span>
-              <span className="macro-value">{Math.round(todaysNutrition?.total_carbs_g ?? 0)}g</span>
+              <span className="macro-value">
+                {todaysNutrition?.total_carbs_g?.toFixed(0) || 0}g
+              </span>
             </div>
             <div className="macro-item">
               <span className="macro-label">Fat</span>
-              <span className="macro-value">{Math.round(todaysNutrition?.total_fat_g ?? 0)}g</span>
+              <span className="macro-value">
+                {todaysNutrition?.total_fat_g?.toFixed(0) || 0}g
+              </span>
             </div>
           </div>
         </div>
 
         <div className="stat-card workout-card">
           <div className="stat-card-header">
-            <span className="stat-icon">💪</span>
-            <h3>Latest Workout</h3>
+            <span className="stat-icon">📈</span>
+            <h3>TDEE</h3>
           </div>
-          {latestWorkout ? (
-            <div className="workout-summary">
-              <div className="workout-name">{latestWorkout.workout_name}</div>
-              <div className="workout-details">
-                {latestWorkout.exercises?.length || 0} exercises • {latestWorkout.duration_minutes || 0} min
+          {tdeeData ? (
+            <div className="tdee-summary">
+              <div className="tdee-row">
+                <span className="tdee-label">BMR</span>
+                <span className="tdee-value">{Math.round(tdeeData.bmr)} kcal</span>
               </div>
-              <div className="workout-date">
-                {new Date(latestWorkout.workout_date).toLocaleDateString()}
+              <div className="tdee-row">
+                <span className="tdee-label">Maintenance</span>
+                <span className="tdee-value">{Math.round(tdeeData.maintenance_calories)} kcal</span>
+              </div>
+              <div className="tdee-row">
+                <span className="tdee-label">Weight Loss</span>
+                <span className="tdee-value">{Math.round(tdeeData.weight_loss_calories)} kcal</span>
+              </div>
+              <div className="tdee-row">
+                <span className="tdee-label">Weight Gain</span>
+                <span className="tdee-value">{Math.round(tdeeData.weight_gain_calories)} kcal</span>
               </div>
             </div>
           ) : (
             <div className="no-data">
-              <p>No workouts logged yet</p>
-              <button className="btn-small" onClick={() => onNavigate('workout-log')}>
-                Log Your First Workout
+              <p>TDEE not available</p>
+              <button className="btn-small" onClick={() => onNavigate('profile')}>
+                Update Profile
               </button>
             </div>
           )}
@@ -339,7 +269,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           <button className="view-all-btn" onClick={() => onNavigate('profile')}>View All →</button>
         </div>
         <div className="activity-feed">
-          {(todaysNutrition?.meals_logged ?? 0) > 0 && (
+          {todaysNutrition?.meals_logged > 0 && (
             <div className="activity-item">
               <span className="activity-icon">🍽️</span>
               <div className="activity-content">
@@ -361,7 +291,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
             </div>
           )}
 
-          {recentMeasurement?.weight_kg != null && (
+          {recentMeasurement && (
             <div className="activity-item">
               <span className="activity-icon">📏</span>
               <div className="activity-content">
@@ -370,14 +300,14 @@ function DashboardPage({ user, onBack, onNavigate }) {
                 </p>
                 <p className="activity-time">
                   {new Date(
-                    recentMeasurement.measurement_date ?? new Date()
+                    recentMeasurement.measurement_date || recentMeasurement.created_at
                   ).toLocaleDateString()}
                 </p>
               </div>
             </div>
           )}
 
-          {!((todaysNutrition?.meals_logged ?? 0) > 0) && !latestWorkout && !(recentMeasurement?.weight_kg != null) && (
+          {!todaysNutrition?.meals_logged && !latestWorkout && !recentMeasurement && (
             <div className="no-activity">
               <p>No recent activity. Start by logging a workout or meal!</p>
             </div>

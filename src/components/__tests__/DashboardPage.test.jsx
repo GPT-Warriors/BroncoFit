@@ -147,7 +147,7 @@ describe('DashboardPage', () => {
       expect(screen.getByText(/target: 165\.3 lbs/i)).toBeInTheDocument();
     });
 
-    it('should display calories card with progress', async () => {
+    it('should display calories card with remaining calories', async () => {
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
       await waitFor(() => {
@@ -155,8 +155,11 @@ describe('DashboardPage', () => {
       });
 
       expect(screen.getByText(/today's calories/i)).toBeInTheDocument();
-      expect(screen.getByText(/1800/i)).toBeInTheDocument();
-      expect(screen.getByText(/goal: 2400 kcal/i)).toBeInTheDocument();
+      // Total consumed
+      expect(screen.getByText(/1800/)).toBeInTheDocument();
+      // New text: Remaining calories instead of "Goal"
+      // maintenance (2400) - consumed (1800) = 600
+      expect(screen.getByText(/remaining: 600 kcal/i)).toBeInTheDocument();
     });
 
     it('should display macros card', async () => {
@@ -172,7 +175,7 @@ describe('DashboardPage', () => {
       expect(screen.getByText(/60g/i)).toBeInTheDocument();
     });
 
-    it('should display latest workout card when workout exists', async () => {
+    it('should display TDEE card with calculated values when TDEE data exists', async () => {
       apiService.getLatestWorkout.mockResolvedValue(mockWorkout);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
@@ -181,13 +184,26 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      expect(screen.getByText(/latest workout/i)).toBeInTheDocument();
-      expect(screen.getByText('Upper Body Strength')).toBeInTheDocument();
-      expect(screen.getByText(/60 min/i)).toBeInTheDocument();
+      // TDEE header
+      expect(screen.getByText(/tdee/i)).toBeInTheDocument();
+
+      // Rows and values
+      expect(screen.getByText(/bmr/i)).toBeInTheDocument();
+      expect(screen.getByText('1850')).toBeInTheDocument();
+
+      expect(screen.getByText(/maintenance/i)).toBeInTheDocument();
+      expect(screen.getByText('2400')).toBeInTheDocument();
+
+      expect(screen.getByText(/weight loss/i)).toBeInTheDocument();
+      expect(screen.getByText('1900')).toBeInTheDocument();
+
+      expect(screen.getByText(/weight gain/i)).toBeInTheDocument();
+      expect(screen.getByText('2900')).toBeInTheDocument();
     });
 
-    it('should display no workout message when no workouts', async () => {
-      apiService.getLatestWorkout.mockRejectedValue(new Error('No workouts'));
+    it('should show TDEE not available when TDEE data is missing', async () => {
+      // Override TDEE mock for this test to simulate missing TDEE data
+      apiService.calculateTDEE.mockResolvedValue(null);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -195,7 +211,8 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      expect(screen.getByText(/no workouts logged yet/i)).toBeInTheDocument();
+      expect(screen.getByText(/tdee not available/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /update profile/i })).toBeInTheDocument();
     });
   });
 
