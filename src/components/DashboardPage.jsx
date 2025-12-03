@@ -49,12 +49,12 @@ function DashboardPage({ user, onBack, onNavigate }) {
             age: currentProfile.age,
             sex: currentProfile.sex,
             height_cm: currentProfile.height_cm,
-            weight_kg: weightForCalc, 
+            weight_kg: weightForCalc, // <--- FIXED: Uses measured weight
             activity_level: currentProfile.activity_level,
           });
           setTdeeData(tdee);
         } catch (err) {
-          console.warn('Failed to calc TDEE:', err);
+          console.warn("Failed to calc TDEE:", err);
         }
       }
 
@@ -63,9 +63,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
         setTodaysNutrition(nutritionRes.value);
       }
 
-      // Handle Workouts (Calendar + Latest)
-      const workoutsRes = await apiService.getWorkouts(100, 0); 
-
+      // 4. Handle Workouts (Calendar + Latest)
+      const workoutsRes = await apiService.getWorkouts(100, 0); // Fetch enough for calendar
+      
       let rawWorkouts = [];
       if (workoutsRes && Array.isArray(workoutsRes)) {
         rawWorkouts = workoutsRes;
@@ -90,9 +90,8 @@ function DashboardPage({ user, onBack, onNavigate }) {
           date: mmddyyyy,
           duration: (w.duration_minutes || 0) + ' min',
           exercises: w.exercises?.length || 0,
-          details:
-            w.exercises?.map((ex) => {
-              let str = ex.exercise_name || 'Exercise';
+          details: w.exercises?.map((ex) => {
+              let str = ex.exercise_name || "Exercise";
               if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
               return str;
             }) || [],
@@ -100,6 +99,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
       });
 
       setCalendarWorkouts(formattedForCalendar);
+
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -118,43 +118,37 @@ function DashboardPage({ user, onBack, onNavigate }) {
     );
   }
 
-  // Logic for Goal-Based TDEE Display 
-  const maintenanceCalories = tdeeData?.maintenance_calories || 0;
+  // --- Logic for Goal-Based TDEE Display ---
+  let targetCalories = tdeeData?.maintenance_calories || 0;
+  let goalLabel = "Maintenance";
 
-  let targetCalories = maintenanceCalories;
-  let goalLabel = 'Maintenance';
-
-  let intensityIndex = 1;
-  if (typeof profile?.goal_intensity === 'number') {
-    intensityIndex = profile.goal_intensity;
-  }
-
-  if (profile?.fitness_goal) {
-    const goal = profile.fitness_goal.toLowerCase();
+  if (profile && tdeeData) {
+    const goal = (profile.fitness_goal || 'maintain').toLowerCase();
+    const maintenance = tdeeData.maintenance_calories;
+    const intensityIndex =
+      typeof profile.goal_intensity === 'number' ? profile.goal_intensity : 1;
+    const offset = GOAL_OFFSETS[intensityIndex] || 0;
+    const intensityLbs = INTENSITY_LBS[intensityIndex] || 1;
 
     if (goal.includes('lose') || goal.includes('cut')) {
-      const offset = GOAL_OFFSETS[intensityIndex] || 0;
-      const perWeek = INTENSITY_LBS[intensityIndex] || 1;
-      targetCalories = profile?.target_calories || Math.round(maintenanceCalories - offset);
-      goalLabel = `Cut • ${perWeek} lb/week`;
-    } else if (
-      goal.includes('gain') ||
-      goal.includes('bulk') ||
-      goal.includes('muscle')
-    ) {
-      const offset = GOAL_OFFSETS[intensityIndex] || 0;
-      const perWeek = INTENSITY_LBS[intensityIndex] || 1;
-      targetCalories = profile?.target_calories || Math.round(maintenanceCalories + offset);
-      goalLabel = `Bulk • ${perWeek} lb/week`;
+      targetCalories =
+        profile.target_calories ||
+        (maintenance ? Math.round(maintenance - offset) : tdeeData.weight_loss_calories);
+      goalLabel = `Cut • ${intensityLbs} lb/week`;
+    } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
+      targetCalories =
+        profile.target_calories ||
+        (maintenance ? Math.round(maintenance + offset) : tdeeData.weight_gain_calories);
+      goalLabel = `Bulk • ${intensityLbs} lb/week`;
     } else {
-      targetCalories = maintenanceCalories;
-      goalLabel = 'Maintenance';
+      targetCalories = profile.target_calories || maintenance || tdeeData.maintenance_calories;
+      goalLabel = "Maintenance";
     }
   }
 
-  if (!targetCalories && maintenanceCalories) {
-    targetCalories = maintenanceCalories;
-    goalLabel = 'Maintenance';
+  if (!targetCalories && tdeeData?.maintenance_calories) {
+      targetCalories = tdeeData.maintenance_calories;
+      goalLabel = "Maintenance";
   }
 
   const displayWeight = recentMeasurement?.weight_kg || profile?.current_weight_kg;
@@ -162,10 +156,17 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const targetWeightLbs = kgToLbs(profile?.target_weight_kg);
 
   const consumed = todaysNutrition?.total_calories ?? 0;
-  const progressMax = targetCalories || maintenanceCalories || 1;
-  const remainingCalories = targetCalories
-    ? Math.max(0, Math.round(targetCalories - consumed))
-    : null;
+  const progressMax = targetCalories || tdeeData?.maintenance_calories || 2000;
+
+  let remainingText = 'Remaining: ---';
+  if (targetCalories) {
+    const diff = Math.round(targetCalories - consumed);
+    if (diff >= 0) {
+      remainingText = `Remaining: ${diff} kcal`;
+    } else {
+      remainingText = `Exceeding by ${Math.abs(diff)} kcal`;
+    }
+  }
 
   return (
     <div className="dashboard-page">
@@ -231,12 +232,12 @@ function DashboardPage({ user, onBack, onNavigate }) {
               className="progress-fill"
               style={{
                 width: `${Math.min((consumed / progressMax) * 100, 100)}%`,
-                backgroundColor: consumed > progressMax ? '#ff4d4d' : undefined,
+                backgroundColor: consumed > progressMax ? '#ff4d4d' : undefined
               }}
             ></div>
           </div>
           <div className="stat-label">
-            Remaining: {remainingCalories !== null ? remainingCalories : '---'} kcal
+            {remainingText}
           </div>
         </div>
 
@@ -276,11 +277,13 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
           {tdeeData ? (
             <div className="tdee-summary single-goal">
-              <div className="stat-value-large">
+               <div className="stat-value-large">
                 {targetCalories ? Math.round(targetCalories) : '---'}
                 <span className="stat-unit">kcal</span>
               </div>
-              <div className="stat-label">Goal: {goalLabel}</div>
+              <div className="stat-label">
+                Goal: {goalLabel}
+              </div>
             </div>
           ) : (
             <div className="no-data">
