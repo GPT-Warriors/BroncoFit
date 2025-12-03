@@ -1,27 +1,36 @@
+/* PAGE LAYOUT */
 .stats-page {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: 100vh;
+  padding: 32px 32px 80px;
+  max-width: 1100px;      /* keeps content from getting too wide */
+  margin: 0 auto;         /* center the whole column */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   color: #fff;
-  padding-bottom: 80px;
+  box-sizing: border-box;
 }
 
+/* HEADER */
 .stats-header {
-  margin-bottom: 24px;
   position: relative;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   min-height: 48px;
+  margin-bottom: 8px;
 }
 
 .stats-header h1 {
   font-size: 2rem;
   margin: 0;
-  color: #fff;
 }
 
 .back-button {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: 1px solid #333;
   color: #fff;
@@ -30,26 +39,21 @@
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s;
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
 }
-
 .back-button:hover {
   background: #222;
   border-color: #00FF6A;
 }
 
+/* SUMMARY CARD */
 .profile-summary-card {
   background: #111;
   border: 1px solid #222;
   border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 32px;
-  display: flex;
-  flex-direction: column;
+  padding: 24px 20px 20px;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .summary-actions {
@@ -72,7 +76,6 @@
   gap: 6px;
   transition: all 0.2s;
 }
-
 .icon-btn:hover {
   background: #333;
   color: #fff;
@@ -81,29 +84,28 @@
 
 .summary-row {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 20px;
-  width: 100%;
-  margin-top: 40px; 
+  gap: 24px;
+  margin-top: 32px;
 }
 
 .summary-item {
+  flex: 1;
+  min-width: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  flex: 1; 
-  min-width: 120px;
 }
 
 .summary-item.clickable {
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
-  transition: background 0.2s;
   border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
 }
 .summary-item.clickable:hover {
   background: rgba(255, 255, 255, 0.05);
@@ -122,22 +124,21 @@
 .summary-value {
   font-size: 1.6rem;
   font-weight: 700;
-  color: #fff;
 }
-
 .summary-value img {
-    max-height: 30px; 
-    vertical-align: middle;
+  max-height: 30px;
+  vertical-align: middle;
 }
-
 .summary-value.accent {
   color: #00FF6A;
 }
 
+/* TABS */
 .stats-tabs {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-top: 16px;
+  margin-bottom: 16px;
   border-bottom: 1px solid #222;
   padding-bottom: 12px;
 }
@@ -152,23 +153,22 @@
   border-radius: 6px;
   transition: all 0.2s;
 }
-
 .tab-btn:hover {
   color: #fff;
 }
-
 .tab-btn.active {
   color: #000;
   background: #00FF6A;
   font-weight: 600;
 }
 
+/* SECTION HEADER */
 .section-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  width: 100%; 
+  width: 100%;
 }
 
 .action-btn-small {
@@ -182,12 +182,12 @@
   font-size: 0.85rem;
   transition: all 0.2s;
 }
-
 .action-btn-small:hover {
   background: #00FF6A;
   color: #000;
 }
 
+/* CHART / CONTENT BLOCKS */
 .chart-container {
   background: #111;
   border: 1px solid #222;
@@ -195,20 +195,18 @@
   padding: 20px;
   margin-bottom: 24px;
   width: 100%;
-  box-sizing: border-box;
   min-height: 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  box-sizing: border-box;
 }
 
-.chart-container > div, 
-.chart-container svg, 
+.chart-container > div,
+.chart-container svg,
 .chart-container canvas {
-    width: 100% !important;
-    max-width: 100%;
+  width: 100% !important;
+  max-width: 100%;
 }
 
+/* STATE WHEN NO DATA */
 .no-data {
   text-align: center;
   padding: 40px;
@@ -216,14 +214,14 @@
   background: #111;
   border-radius: 12px;
   border: 1px dashed #333;
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* MODAL */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
@@ -243,9 +241,8 @@
 }
 
 .modal-content h3 {
-  margin-top: 0;
+  margin: 0 0 24px;
   color: #fff;
-  margin-bottom: 24px;
   font-size: 1.2rem;
   border-bottom: 1px solid #333;
   padding-bottom: 16px;
@@ -275,7 +272,7 @@
   font-size: 1rem;
   transition: border-color 0.2s, box-shadow 0.2s;
   appearance: none;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 .form-group select {
@@ -311,7 +308,6 @@
   font-weight: 500;
   transition: background 0.2s;
 }
-
 .btn-cancel:hover {
   background: #3a3a3a;
 }
@@ -324,12 +320,32 @@
   border-radius: 20px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition: transform 0.1s, background 0.2s;
 }
-
 .btn-save:hover {
   background: #00cc55;
 }
 .btn-save:active {
   transform: scale(0.98);
+}
+
+/* RESPONSIVE TWEAKS */
+@media (max-width: 768px) {
+  .stats-page {
+    padding-inline: 16px;
+  }
+
+  .summary-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .summary-item {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .stats-tabs {
+    flex-wrap: wrap;
+  }
 }
