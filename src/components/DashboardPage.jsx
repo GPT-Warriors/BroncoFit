@@ -3,6 +3,9 @@ import apiService from '../services/api';
 import WorkoutCalendar from './WorkoutCalendar';
 import './DashboardPage.css';
 
+const GOAL_OFFSETS = [250, 500, 750, 1000];
+const INTENSITY_LBS = [0.5, 1, 1.5, 2];
+
 function DashboardPage({ user, onBack, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -46,12 +49,12 @@ function DashboardPage({ user, onBack, onNavigate }) {
             age: currentProfile.age,
             sex: currentProfile.sex,
             height_cm: currentProfile.height_cm,
-            weight_kg: weightForCalc, // <--- FIXED: Uses measured weight
+            weight_kg: weightForCalc, 
             activity_level: currentProfile.activity_level,
           });
           setTdeeData(tdee);
         } catch (err) {
-          console.warn("Failed to calc TDEE:", err);
+          console.warn('Failed to calc TDEE:', err);
         }
       }
 
@@ -60,9 +63,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
         setTodaysNutrition(nutritionRes.value);
       }
 
-      // 4. Handle Workouts (Calendar + Latest)
-      const workoutsRes = await apiService.getWorkouts(100, 0); // Fetch enough for calendar
-      
+      // Handle Workouts (Calendar + Latest)
+      const workoutsRes = await apiService.getWorkouts(100, 0); 
+
       let rawWorkouts = [];
       if (workoutsRes && Array.isArray(workoutsRes)) {
         rawWorkouts = workoutsRes;
@@ -87,8 +90,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
           date: mmddyyyy,
           duration: (w.duration_minutes || 0) + ' min',
           exercises: w.exercises?.length || 0,
-          details: w.exercises?.map((ex) => {
-              let str = ex.exercise_name || "Exercise";
+          details:
+            w.exercises?.map((ex) => {
+              let str = ex.exercise_name || 'Exercise';
               if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
               return str;
             }) || [],
@@ -96,7 +100,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
       });
 
       setCalendarWorkouts(formattedForCalendar);
-
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -115,24 +118,43 @@ function DashboardPage({ user, onBack, onNavigate }) {
     );
   }
 
-  // --- Logic for Goal-Based TDEE Display ---
-  let targetCalories = tdeeData?.maintenance_calories || 0;
-  let goalLabel = "Maintenance";
-  
-  // Check user goal to display the CORRECT number
+  // Logic for Goal-Based TDEE Display 
+  const maintenanceCalories = tdeeData?.maintenance_calories || 0;
+
+  let targetCalories = maintenanceCalories;
+  let goalLabel = 'Maintenance';
+
+  let intensityIndex = 1;
+  if (typeof profile?.goal_intensity === 'number') {
+    intensityIndex = profile.goal_intensity;
+  }
+
   if (profile?.fitness_goal) {
-    if (profile.fitness_goal.includes('lose') || profile.fitness_goal.includes('cut')) {
-      targetCalories = tdeeData?.weight_loss_calories;
-      goalLabel = "Fat Loss Target";
-    } else if (profile.fitness_goal.includes('gain') || profile.fitness_goal.includes('bulk') || profile.fitness_goal.includes('muscle')) {
-      targetCalories = tdeeData?.weight_gain_calories;
-      goalLabel = "Bulking Target";
+    const goal = profile.fitness_goal.toLowerCase();
+
+    if (goal.includes('lose') || goal.includes('cut')) {
+      const offset = GOAL_OFFSETS[intensityIndex] || 0;
+      const perWeek = INTENSITY_LBS[intensityIndex] || 1;
+      targetCalories = profile?.target_calories || Math.round(maintenanceCalories - offset);
+      goalLabel = `Cut • ${perWeek} lb/week`;
+    } else if (
+      goal.includes('gain') ||
+      goal.includes('bulk') ||
+      goal.includes('muscle')
+    ) {
+      const offset = GOAL_OFFSETS[intensityIndex] || 0;
+      const perWeek = INTENSITY_LBS[intensityIndex] || 1;
+      targetCalories = profile?.target_calories || Math.round(maintenanceCalories + offset);
+      goalLabel = `Bulk • ${perWeek} lb/week`;
+    } else {
+      targetCalories = maintenanceCalories;
+      goalLabel = 'Maintenance';
     }
   }
 
-  if (!targetCalories && tdeeData?.maintenance_calories) {
-      targetCalories = tdeeData.maintenance_calories;
-      goalLabel = "Maintenance";
+  if (!targetCalories && maintenanceCalories) {
+    targetCalories = maintenanceCalories;
+    goalLabel = 'Maintenance';
   }
 
   const displayWeight = recentMeasurement?.weight_kg || profile?.current_weight_kg;
@@ -140,8 +162,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const targetWeightLbs = kgToLbs(profile?.target_weight_kg);
 
   const consumed = todaysNutrition?.total_calories ?? 0;
-  // Use the GOAL calories for the progress bar, not always maintenance
-  const progressMax = targetCalories || 2000; 
+  const progressMax = targetCalories || maintenanceCalories || 1;
   const remainingCalories = targetCalories
     ? Math.max(0, Math.round(targetCalories - consumed))
     : null;
@@ -210,7 +231,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
               className="progress-fill"
               style={{
                 width: `${Math.min((consumed / progressMax) * 100, 100)}%`,
-                backgroundColor: consumed > progressMax ? '#ff4d4d' : undefined
+                backgroundColor: consumed > progressMax ? '#ff4d4d' : undefined,
               }}
             ></div>
           </div>
@@ -255,13 +276,11 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
           {tdeeData ? (
             <div className="tdee-summary single-goal">
-               <div className="stat-value-large">
+              <div className="stat-value-large">
                 {targetCalories ? Math.round(targetCalories) : '---'}
                 <span className="stat-unit">kcal</span>
               </div>
-              <div className="stat-label">
-                Goal: {goalLabel}
-              </div>
+              <div className="stat-label">Goal: {goalLabel}</div>
             </div>
           ) : (
             <div className="no-data">

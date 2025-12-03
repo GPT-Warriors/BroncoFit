@@ -13,7 +13,7 @@ vi.mock('../../services/api', () => ({
     getProfile: vi.fn(),
     getTodaysNutritionSummary: vi.fn(),
     getMeasurements: vi.fn(),
-    getLatestWorkout: vi.fn(), 
+    getLatestWorkout: vi.fn(),
     getWorkouts: vi.fn(),
     calculateTDEE: vi.fn(),
   },
@@ -35,7 +35,7 @@ describe('DashboardPage', () => {
     current_weight_kg: 80.8,
     target_weight_kg: 75.0,
     activity_level: 'moderate',
-    fitness_goal: 'lose_weight', // Default for tests
+    fitness_goal: 'lose_weight',
     updated_at: new Date().toISOString(),
   };
 
@@ -76,10 +76,9 @@ describe('DashboardPage', () => {
 
   describe('Component Rendering', () => {
     it('should render loading state initially', () => {
-      // Return promises that never resolve to test loading state
       apiService.getProfile.mockImplementation(() => new Promise(() => {}));
       apiService.getTodaysNutritionSummary.mockImplementation(() => new Promise(() => {}));
-      
+
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
       expect(screen.getByText(/loading your dashboard/i)).toBeInTheDocument();
@@ -88,7 +87,7 @@ describe('DashboardPage', () => {
     it('should render dashboard after loading', async () => {
       apiService.getProfile.mockResolvedValue(mockProfile);
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
-      apiService.getMeasurements.mockResolvedValue([mockMeasurement]); 
+      apiService.getMeasurements.mockResolvedValue([mockMeasurement]);
       apiService.getWorkouts.mockResolvedValue([mockWorkout]);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
 
@@ -136,7 +135,7 @@ describe('DashboardPage', () => {
       expect(screen.getByText(/remaining:\s*100 kcal/i)).toBeInTheDocument();
     });
 
-    it('should display TDEE card showing Fat Loss Target when goal is lose_weight', async () => {
+    it('should display TDEE card showing cut goal with per-week rate when goal is lose_weight', async () => {
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
       await waitFor(() => {
@@ -144,11 +143,12 @@ describe('DashboardPage', () => {
       });
 
       expect(screen.getByText(/daily target/i)).toBeInTheDocument();
-      expect(screen.getByText(/1900/)).toBeInTheDocument(); 
-      expect(screen.getByText(/goal: fat loss target/i)).toBeInTheDocument();
+      expect(screen.getByText(/1900/)).toBeInTheDocument();
+      expect(screen.getByText(/goal:\s*cut/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 lb\/week/i)).toBeInTheDocument();
     });
 
-    it('should display TDEE card showing Bulking Target when goal is gain_muscle', async () => {
+    it('should display TDEE card showing bulk goal with per-week rate when goal is gain_muscle', async () => {
       const bulkProfile = { ...mockProfile, fitness_goal: 'gain_muscle' };
       apiService.getProfile.mockResolvedValue(bulkProfile);
 
@@ -160,7 +160,8 @@ describe('DashboardPage', () => {
 
       expect(screen.getByText(/daily target/i)).toBeInTheDocument();
       expect(screen.getByText(/2900/)).toBeInTheDocument();
-      expect(screen.getByText(/goal: bulking target/i)).toBeInTheDocument();
+      expect(screen.getByText(/goal:\s*bulk/i)).toBeInTheDocument();
+      expect(screen.getByText(/1 lb\/week/i)).toBeInTheDocument();
     });
   });
 
@@ -180,9 +181,9 @@ describe('DashboardPage', () => {
     });
 
     it('should use measured weight for TDEE calculation if available', async () => {
-      const heavyMeasurement = { ...mockMeasurement, weight_kg: 100 }; 
+      const heavyMeasurement = { ...mockMeasurement, weight_kg: 100 };
       apiService.getMeasurements.mockResolvedValue([heavyMeasurement]);
-      apiService.getProfile.mockResolvedValue(mockProfile); 
+      apiService.getProfile.mockResolvedValue(mockProfile);
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getWorkouts.mockResolvedValue([]);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
@@ -190,9 +191,11 @@ describe('DashboardPage', () => {
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
       await waitFor(() => {
-        expect(apiService.calculateTDEE).toHaveBeenCalledWith(expect.objectContaining({
-          weight_kg: 100 
-        }));
+        expect(apiService.calculateTDEE).toHaveBeenCalledWith(
+          expect.objectContaining({
+            weight_kg: 100,
+          })
+        );
       });
     });
   });
