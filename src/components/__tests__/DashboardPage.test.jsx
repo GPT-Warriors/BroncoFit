@@ -7,13 +7,13 @@ import '@testing-library/jest-dom';
 import DashboardPage from '../DashboardPage';
 import apiService from '../../services/api';
 
-// Mock the API service
 vi.mock('../../services/api', () => ({
   default: {
     getProfile: vi.fn(),
     getTodaysNutritionSummary: vi.fn(),
     getLatestMeasurement: vi.fn(),
     getLatestWorkout: vi.fn(),
+    getWorkouts: vi.fn(),
     calculateTDEE: vi.fn(),
   },
 }));
@@ -89,6 +89,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.getLatestWorkout.mockResolvedValue(mockWorkout);
+      apiService.getWorkouts.mockResolvedValue([mockWorkout]);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
@@ -107,6 +108,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={mockOnBack} onNavigate={vi.fn()} />);
 
@@ -127,6 +129,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
     });
 
     it('should display current weight card', async () => {
@@ -137,10 +140,8 @@ describe('DashboardPage', () => {
       });
 
       expect(screen.getByText(/current weight/i)).toBeInTheDocument();
-
       expect(screen.getByText('178.1')).toBeInTheDocument();
       expect(screen.getAllByText('lbs')[0]).toBeInTheDocument();
-
       expect(screen.getByText(/target: 165\.3 lbs/i)).toBeInTheDocument();
     });
 
@@ -171,6 +172,7 @@ describe('DashboardPage', () => {
 
     it('should display TDEE card with calculated values when TDEE data exists', async () => {
       apiService.getLatestWorkout.mockResolvedValue(mockWorkout);
+      apiService.getWorkouts.mockResolvedValue([mockWorkout]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -213,6 +215,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
     });
 
     it('should render all quick action buttons', async () => {
@@ -283,6 +286,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
     });
 
     it('should display recent activity section', async () => {
@@ -305,6 +309,8 @@ describe('DashboardPage', () => {
 
     it('should display workout activity when workout exists', async () => {
       apiService.getLatestWorkout.mockResolvedValue(mockWorkout);
+      apiService.getWorkouts.mockResolvedValue([mockWorkout]);
+
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
       await waitFor(() => {
         expect(screen.getByText(/completed upper body strength/i)).toBeInTheDocument();
@@ -322,6 +328,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue({ meals_logged: 0 });
       apiService.getLatestWorkout.mockRejectedValue(new Error('No workouts'));
       apiService.getLatestMeasurement.mockRejectedValue(new Error('No measurements'));
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -351,6 +358,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -366,6 +374,7 @@ describe('DashboardPage', () => {
       apiService.getProfile.mockRejectedValue(new Error('API Error'));
       apiService.getTodaysNutritionSummary.mockRejectedValue(new Error('API Error'));
       apiService.getLatestMeasurement.mockRejectedValue(new Error('API Error'));
+      apiService.getWorkouts.mockRejectedValue(new Error('API Error'));
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -381,6 +390,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(null);
       apiService.getLatestMeasurement.mockResolvedValue(null);
       apiService.getLatestWorkout.mockRejectedValue(new Error('No workouts'));
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -399,6 +409,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -415,6 +426,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockResolvedValue(mockMeasurement);
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 
@@ -430,6 +442,7 @@ describe('DashboardPage', () => {
       apiService.getTodaysNutritionSummary.mockResolvedValue(mockNutrition);
       apiService.getLatestMeasurement.mockRejectedValue(new Error('No measurements'));
       apiService.calculateTDEE.mockResolvedValue(mockTDEE);
+      apiService.getWorkouts.mockResolvedValue([]);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
 

@@ -50,8 +50,16 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
         if (profileRes.value) {
           try {
-            const tdee = await apiService.calculateTDEE(profileRes.value);
-            setTdeeData(tdee || null);
+            const calculateTdeeFn =
+              apiService.calculateTDEEFromProfile || apiService.calculateTDEE;
+
+            if (typeof calculateTdeeFn === 'function') {
+              const tdee = await calculateTdeeFn(profileRes.value);
+              setTdeeData(tdee || null);
+            } else {
+              console.warn('No TDEE function available on apiService');
+              setTdeeData(null);
+            }
           } catch (err) {
             console.error('Error calculating TDEE:', err);
             setTdeeData(null);
@@ -76,29 +84,37 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
         if ((!latestWorkoutRes || latestWorkoutRes.status !== 'fulfilled') && rawWorkouts.length > 0) {
           const sorted = [...rawWorkouts].sort(
-            (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
+            (a, b) => new Date(b.workout_date || b.date || b.workoutDate) - new Date(a.workout_date || a.date || a.workoutDate)
           );
           setLatestWorkout(sorted[0]);
         }
 
-        const formattedForCalendar = rawWorkouts.map((w) => {
-          const d = new Date(w.workout_date);
-          const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-          return {
-            id: w.id || w._id || Math.random(),
-            title: w.workout_name,
-            date: mmddyyyy,
-            duration: (w.duration_minutes || 0) + ' min',
-            exercises: w.exercises?.length || 0,
-            details:
-              w.exercises?.map((ex) => {
-                let str = ex.exercise_name;
-                if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
-                if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
-                return str;
-              }) || [],
-          };
-        });
+        const formattedForCalendar = rawWorkouts
+          .map((w) => {
+            const rawDate = w.workout_date || w.date || w.workoutDate;
+            if (!rawDate) return null;
+
+            const d = new Date(rawDate);
+            if (Number.isNaN(d.getTime())) return null;
+
+            const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+            return {
+              id: w.id || w._id || Math.random(),
+              title: w.workout_name || w.name || 'Workout',
+              date: mmddyyyy,
+              duration: (w.duration_minutes || w.duration || 0) + ' min',
+              exercises: Array.isArray(w.exercises) ? w.exercises.length : 0,
+              details:
+                w.exercises?.map((ex) => {
+                  let str = ex.exercise_name || ex.name || 'Exercise';
+                  if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
+                  if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
+                  return str;
+                }) || [],
+            };
+          })
+          .filter(Boolean);
+
         setCalendarWorkouts(formattedForCalendar);
       }
     } catch (e) {
@@ -297,7 +313,11 @@ function DashboardPage({ user, onBack, onNavigate }) {
               <div className="activity-content">
                 <p className="activity-title">Completed {latestWorkout.workout_name}</p>
                 <p className="activity-time">
-                  {new Date(latestWorkout.workout_date).toLocaleDateString()}
+                  {new Date(
+                    latestWorkout.workout_date ||
+                      latestWorkout.date ||
+                      latestWorkout.workoutDate
+                  ).toLocaleDateString()}
                 </p>
               </div>
             </div>
