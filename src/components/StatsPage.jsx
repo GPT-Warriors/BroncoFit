@@ -9,8 +9,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  Legend
+  ResponsiveContainer
 } from 'recharts';
 import apiService from '../services/api';
 import './StatsPage.css';
@@ -26,10 +25,8 @@ function StatsPage({ onBack }) {
   const [activeTab, setActiveTab] = useState('weight');
   const [expandedWorkouts, setExpandedWorkouts] = useState({});
 
-  const [showWeightModal, setShowWeightModal] = useState(false);
   const [newWeight, setNewWeight] = useState('');
 
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [editGoal, setEditGoal] = useState('maintain');
   const [editActivity, setEditActivity] = useState('moderately_active');
 
@@ -52,8 +49,9 @@ function StatsPage({ onBack }) {
       setEditGoal(profile.fitness_goal || 'maintain');
       setEditActivity(profile.activity_level || 'moderately_active');
     }
-  }, [profile, showProfileModal]);
+  }, [profile]);
 
+  // Loads profile, measurements, workouts, meals and calculates TDEE
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -79,6 +77,7 @@ function StatsPage({ onBack }) {
     }
   };
 
+  // Calculates TDEE using profile and measurement data
   const runCalculation = async (profileData, measurementsData) => {
     const weightForCalc = measurementsData?.[0]?.weight_kg || profileData.current_weight_kg;
 
@@ -96,6 +95,7 @@ function StatsPage({ onBack }) {
     }
   };
 
+  // Handles saving a new weight entry
   const handleAddWeight = async (e) => {
     e.preventDefault();
     if (!newWeight) return;
@@ -109,13 +109,13 @@ function StatsPage({ onBack }) {
       });
 
       setNewWeight('');
-      setShowWeightModal(false);
       await loadAllData();
     } catch (error) {
       alert('Failed to save weight.');
     }
   };
 
+  // Handles updating profile goal and activity level
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
@@ -128,8 +128,6 @@ function StatsPage({ onBack }) {
 
       const profileForCalc = { ...updatedProfile, activity_level: editActivity };
       await runCalculation(profileForCalc, measurements);
-
-      setShowProfileModal(false);
     } catch (error) {
       console.error('Update failed', error);
       alert('Failed to update profile. Check activity level inputs.');
@@ -182,34 +180,98 @@ function StatsPage({ onBack }) {
     }
   }
 
+  // Uses maintenance calories if no other target is set
   if (!goalCalories && tdeeData?.maintenance_calories) {
     goalCalories = tdeeData.maintenance_calories;
   }
 
-  if (loading) return <div className="stats-page"><p>Loading...</p></div>;
+  if (loading) {
+    return (
+      <div className="stats-page">
+        <div className="stats-loading">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="stats-page">
+      <button className="back-button" onClick={onBack}>
+        ← Back
+      </button>
+
       <div className="stats-header">
-        <button className="back-button" onClick={onBack}>← Back</button>
-        <div className="stats-title">
-          <h1>📊 Your Stats</h1>
-          <p>Track your progress and achievements</p>
-        </div>
+        <h1>📊 Your Stats</h1>
+        <p>Track your progress and achievements</p>
       </div>
 
       <div className="profile-summary-card">
-        <div className="summary-actions">
-          <button
-            className="icon-btn"
-            onClick={() => setShowProfileModal(true)}
-            title="Edit Goals & Activity"
-          >
-            ✏️ Edit Profile
-          </button>
+        <div className="summary-control-panel">
+          <div className="summary-control-header">
+            <h3>Log Current Weight</h3>
+            <p>Update today&apos;s weight and fine-tune your goals.</p>
+          </div>
+
+          <form className="quick-form quick-form-weight" onSubmit={handleAddWeight}>
+            <div className="quick-form-group">
+              <label htmlFor="weight-input-top">Weight (lbs)</label>
+              <input
+                id="weight-input-top"
+                type="number"
+                step="0.1"
+                value={newWeight}
+                onChange={(e) => setNewWeight(e.target.value)}
+                placeholder="e.g. 165.5"
+              />
+            </div>
+            <div className="quick-form-actions">
+              <button type="submit" className="btn-primary">
+                Save Weight
+              </button>
+            </div>
+          </form>
+
+          <form className="quick-form quick-form-goals" onSubmit={handleUpdateProfile}>
+            <div className="quick-form-inline">
+              <div className="quick-form-group">
+                <label htmlFor="fitness-goal-inline">Fitness Goal</label>
+                <select
+                  id="fitness-goal-inline"
+                  value={editGoal}
+                  onChange={(e) => setEditGoal(e.target.value)}
+                >
+                  <option value="lose_weight">Cut (Lose Weight)</option>
+                  <option value="maintain">Maintain Weight</option>
+                  <option value="gain_muscle">Bulk (Gain Muscle)</option>
+                </select>
+              </div>
+
+              <div className="quick-form-group">
+                <label htmlFor="activity-level-inline">Activity Level</label>
+                <select
+                  id="activity-level-inline"
+                  value={editActivity}
+                  onChange={(e) => setEditActivity(e.target.value)}
+                >
+                  <option value="sedentary">Sedentary</option>
+                  <option value="lightly_active">Lightly Active (1-3 days/week)</option>
+                  <option value="moderately_active">Moderately Active (3-5 days/week)</option>
+                  <option value="very_active">Very Active (6-7 days/week)</option>
+                  <option value="extra_active">Extra Active (Physical job + training)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="quick-form-actions">
+              <button type="submit" className="btn-secondary">
+                Update Goals
+              </button>
+            </div>
+          </form>
         </div>
 
-        <div className="summary-row">
+        <div className="summary-stats-grid">
           <div className="summary-item">
             <span className="summary-label">Height</span>
             <span className="summary-value">
@@ -217,8 +279,8 @@ function StatsPage({ onBack }) {
             </span>
           </div>
 
-          <div className="summary-item clickable" onClick={() => setShowWeightModal(true)}>
-            <span className="summary-label">Current Weight 📝</span>
+          <div className="summary-item">
+            <span className="summary-label">Current Weight</span>
             <span className="summary-value">
               {measurements[0]
                 ? kgToLbs(measurements[0].weight_kg)
@@ -245,6 +307,7 @@ function StatsPage({ onBack }) {
         </div>
       </div>
 
+      {/* Tab buttons to switch between sections */}
       <div className="stats-tabs">
         <button
           className={`tab-btn ${activeTab === 'weight' ? 'active' : ''}`}
@@ -266,15 +329,11 @@ function StatsPage({ onBack }) {
         </button>
       </div>
 
+      {/* Shows content for the selected tab */}
       {activeTab === 'weight' && (
-        <div className="chart-container">
-          <div className="section-header-row">
-            <h2>Weight Progress</h2>
-            <button className="action-btn-small" onClick={() => setShowWeightModal(true)}>
-              + Log Weight
-            </button>
-          </div>
-          <div className="chart-inner">
+        <div className="tab-content">
+          <h2>Weight Progress</h2>
+          <div className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={weightChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -294,32 +353,35 @@ function StatsPage({ onBack }) {
         </div>
       )}
 
+      {/* Workouts tab content */}
       {activeTab === 'workouts' && (
-        <div className="chart-container">
-          <div className="section-header-row">
-            <h2>Recent Workouts</h2>
-          </div>
-          <div className="workouts-list">
+        <div className="tab-content">
+          <h2>Recent Workouts</h2>
+          <div className="workout-timeline">
             {workouts.map((w, i) => (
               <div key={i} className="workout-item">
-                <h4>{w.workout_name}</h4>
-                <small>
-                  {new Date(w.workout_date).toLocaleDateString()} •{' '}
-                  {w.duration_minutes ? `${w.duration_minutes} min` : ''}
-                </small>
+                <div className="workout-header">
+                  <h4>{w.workout_name}</h4>
+                  <span className="workout-date">
+                    {new Date(w.workout_date).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             ))}
-            {workouts.length === 0 && <p className="no-data-text">No workouts logged yet.</p>}
+            {workouts.length === 0 && (
+              <div className="no-data">
+                <p>No workouts logged yet.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {/* Nutrition tab content */}
       {activeTab === 'nutrition' && (
-        <div className="chart-container">
-          <div className="section-header-row">
-            <h2>Daily Calories</h2>
-          </div>
-          <div className="chart-inner">
+        <div className="tab-content">
+          <h2>Daily Calories</h2>
+          <div className="chart-container">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={nutritionChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -329,90 +391,6 @@ function StatsPage({ onBack }) {
                 <Bar dataKey="calories" fill="#00FF6A" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {showWeightModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Log Current Weight</h3>
-            <form onSubmit={handleAddWeight}>
-              <div className="form-group">
-                <label htmlFor="weight-input">Weight (lbs)</label>
-                <input
-                  id="weight-input"
-                  type="number"
-                  step="0.1"
-                  value={newWeight}
-                  onChange={(e) => setNewWeight(e.target.value)}
-                  placeholder="e.g. 165.5"
-                  autoFocus
-                />
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setShowWeightModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-save">
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showProfileModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Edit Goals & Activity</h3>
-            <form onSubmit={handleUpdateProfile}>
-              <div className="form-group">
-                <label htmlFor="fitness-goal">Fitness Goal</label>
-                <select
-                  id="fitness-goal"
-                  value={editGoal}
-                  onChange={(e) => setEditGoal(e.target.value)}
-                >
-                  <option value="lose_weight">Cut (Lose Weight)</option>
-                  <option value="maintain">Maintain Weight</option>
-                  <option value="gain_muscle">Bulk (Gain Muscle)</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="activity-level">Activity Level</label>
-                <select
-                  id="activity-level"
-                  value={editActivity}
-                  onChange={(e) => setEditActivity(e.target.value)}
-                >
-                  <option value="sedentary">Sedentary</option>
-                  <option value="lightly_active">Lightly Active (1-3 days/week)</option>
-                  <option value="moderately_active">Moderately Active (3-5 days/week)</option>
-                  <option value="very_active">Very Active (6-7 days/week)</option>
-                  <option value="extra_active">Extra Active (Physical job + training)</option>
-                </select>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setShowProfileModal(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-save">
-                  Update Profile
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
