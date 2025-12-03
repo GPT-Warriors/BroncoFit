@@ -45,75 +45,63 @@ function DashboardPage({ user, onBack, onNavigate }) {
         getWorkoutsSafe(),
       ]);
 
+      // Profile + TDEE
       if (profileRes.status === 'fulfilled') {
         setProfile(profileRes.value || null);
 
         if (profileRes.value) {
-          try {
-            const calculateTdeeFn =
-              apiService.calculateTDEEFromProfile || apiService.calculateTDEE;
-
-            if (typeof calculateTdeeFn === 'function') {
-              const tdee = await calculateTdeeFn(profileRes.value);
-              setTdeeData(tdee || null);
-            } else {
-              console.warn('No TDEE function available on apiService');
-              setTdeeData(null);
-            }
-          } catch (err) {
-            console.error('Error calculating TDEE:', err);
-            setTdeeData(null);
-          }
+          const tdee = await apiService.calculateTDEE(profileRes.value);
+          setTdeeData(tdee || null);
         }
       }
 
+      // Nutrition
       if (nutritionRes.status === 'fulfilled') {
         setTodaysNutrition(nutritionRes.value || null);
       }
 
+      // Measurements
       if (measurementRes.status === 'fulfilled') {
         setRecentMeasurement(measurementRes.value || null);
       }
 
+      // Latest workout
       if (latestWorkoutRes.status === 'fulfilled') {
         setLatestWorkout(latestWorkoutRes.value || null);
       }
 
+      // All workouts -> calendar + fallback latest
       if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
         const rawWorkouts = workoutsRes.value;
 
         if ((!latestWorkoutRes || latestWorkoutRes.status !== 'fulfilled') && rawWorkouts.length > 0) {
           const sorted = [...rawWorkouts].sort(
-            (a, b) => new Date(b.workout_date || b.date || b.workoutDate) - new Date(a.workout_date || a.date || a.workoutDate)
+            (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
           );
           setLatestWorkout(sorted[0]);
         }
 
-        const formattedForCalendar = rawWorkouts
-          .map((w) => {
-            const rawDate = w.workout_date || w.date || w.workoutDate;
-            if (!rawDate) return null;
+        const formattedForCalendar = rawWorkouts.map((w) => {
+          const d = new Date(w.workout_date);
+          const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 
-            const d = new Date(rawDate);
-            if (Number.isNaN(d.getTime())) return null;
-
-            const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-            return {
-              id: w.id || w._id || Math.random(),
-              title: w.workout_name || w.name || 'Workout',
-              date: mmddyyyy,
-              duration: (w.duration_minutes || w.duration || 0) + ' min',
-              exercises: Array.isArray(w.exercises) ? w.exercises.length : 0,
-              details:
-                w.exercises?.map((ex) => {
-                  let str = ex.exercise_name || ex.name || 'Exercise';
-                  if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
-                  if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
-                  return str;
-                }) || [],
-            };
-          })
-          .filter(Boolean);
+          return {
+            id: w.id || w._id || Math.random(),
+            title: w.workout_name,
+            date: mmddyyyy,
+            duration: (w.duration_minutes || 0) + ' min',
+            exercises: w.exercises?.length || 0,
+            details:
+              w.exercises?.map((ex) => {
+                let str = ex.exercise_name;
+                if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
+                if (ex.weight_kg) {
+                  str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
+                }
+                return str;
+              }) || [],
+          };
+        });
 
         setCalendarWorkouts(formattedForCalendar);
       }
@@ -144,6 +132,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
   const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : null;
 
+  // remaining calories = maintenance - consumed (never below 0)
   const consumed = todaysNutrition?.total_calories ?? 0;
   const maintenance = tdeeData?.maintenance_calories ?? 0;
   const remainingCalories = Math.max(0, Math.round(maintenance - consumed));
@@ -174,6 +163,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
       </div>
 
       <div className="stats-grid-modern">
+        {/* Current Weight */}
         <div className="stat-card weight-card">
           <div className="stat-card-header">
             <span className="stat-icon">⚖️</span>
@@ -186,6 +176,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           <div className="stat-label">Target: {targetWeightLbs || '---'} lbs</div>
         </div>
 
+        {/* Today's Calories (shows remaining) */}
         <div className="stat-card calories-card">
           <div className="stat-card-header">
             <span className="stat-icon">🔥</span>
@@ -212,6 +203,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
+        {/* Macros */}
         <div className="stat-card macros-card">
           <div className="stat-card-header">
             <span className="stat-icon">📊</span>
@@ -239,6 +231,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
+        {/* TDEE */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
             <span className="stat-icon">📈</span>
@@ -313,11 +306,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
               <div className="activity-content">
                 <p className="activity-title">Completed {latestWorkout.workout_name}</p>
                 <p className="activity-time">
-                  {new Date(
-                    latestWorkout.workout_date ||
-                      latestWorkout.date ||
-                      latestWorkout.workoutDate
-                  ).toLocaleDateString()}
+                  {new Date(latestWorkout.workout_date).toLocaleDateString()}
                 </p>
               </div>
             </div>
