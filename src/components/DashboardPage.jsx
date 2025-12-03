@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import apiService from '../services/api';
 import WorkoutCalendar from './WorkoutCalendar';
 import './DashboardPage.css';
@@ -14,21 +13,21 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [tdeeData, setTdeeData] = useState(null);
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
 
-  // load data on mount
   useEffect(() => {
     loadDashboardData();
   }, []);
 
-  // fetch all data in parallel and prepare view models
+  // fetch core cards in parallel; calendar fetch is optional and isolated
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [profileRes, nutritionRes, measurementRes, workoutsRes] = await Promise.allSettled([
-        apiService.getProfile(),
-        apiService.getTodaysNutritionSummary(),
-        apiService.getLatestMeasurement(),
-        apiService.getWorkouts(),
-      ]);
+      const [profileRes, nutritionRes, measurementRes, latestWorkoutRes] =
+        await Promise.allSettled([
+          apiService.getProfile(),
+          apiService.getTodaysNutritionSummary(),
+          apiService.getLatestMeasurement(),
+          apiService.getLatestWorkout(), // aligns with tests
+        ]);
 
       if (profileRes.status === 'fulfilled') {
         setProfile(profileRes.value);
@@ -40,38 +39,36 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
       if (nutritionRes.status === 'fulfilled') setTodaysNutrition(nutritionRes.value);
       if (measurementRes.status === 'fulfilled') setRecentMeasurement(measurementRes.value);
+      if (latestWorkoutRes.status === 'fulfilled') setLatestWorkout(latestWorkoutRes.value);
 
-      // build calendar items from workout history
-      if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
-        const rawWorkouts = workoutsRes.value;
-
-        if (rawWorkouts.length > 0) {
-          const sorted = [...rawWorkouts].sort(
-            (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
-          );
-          setLatestWorkout(sorted[0]);
+      // build calendar from history if available
+      if (typeof apiService.getWorkouts === 'function') {
+        try {
+          const history = await apiService.getWorkouts();
+          if (Array.isArray(history)) {
+            const formatted = history.map(w => {
+              const d = new Date(w.workout_date);
+              const dateStr = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+              return {
+                id: w.id || w._id || Math.random(),
+                title: w.workout_name,
+                date: dateStr,
+                duration: (w.duration_minutes || 0) + ' min',
+                exercises: w.exercises?.length || 0,
+                details:
+                  w.exercises?.map(ex => {
+                    let detail = ex.exercise_name;
+                    if (ex.sets && ex.reps) detail += ` (${ex.sets}×${ex.reps})`;
+                    if (ex.weight_kg) detail += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
+                    return detail;
+                  }) || [],
+              };
+            });
+            setCalendarWorkouts(formatted);
+          }
+        } catch {
+          // ignore calendar errors
         }
-
-        const formattedForCalendar = rawWorkouts.map(w => {
-          const dateObj = new Date(w.workout_date);
-          const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-
-          return {
-            id: w.id || w._id || Math.random(),
-            title: w.workout_name,
-            date: dateStr,
-            duration: (w.duration_minutes || 0) + ' min',
-            exercises: w.exercises?.length || 0,
-            details:
-              w.exercises?.map(ex => {
-                let detail = ex.exercise_name;
-                if (ex.sets && ex.reps) detail += ` (${ex.sets}×${ex.reps})`;
-                if (ex.weight_kg) detail += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
-                return detail;
-              }) || [],
-          };
-        });
-        setCalendarWorkouts(formattedForCalendar);
       }
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -80,10 +77,8 @@ function DashboardPage({ user, onBack, onNavigate }) {
     }
   };
 
-  // unit helper
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
 
-  // loading view
   if (loading) {
     return (
       <div className="dashboard-page">
@@ -94,6 +89,15 @@ function DashboardPage({ user, onBack, onNavigate }) {
       </div>
     );
   }
+
+  const currentWeightLbs =
+    recentMeasurement
+      ? kgToLbs(recentMeasurement.weight_kg)
+      : profile
+      ? kgToLbs(profile.current_weight_kg)
+      : null;
+
+  const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : null;
 
   return (
     <div className="dashboard-page">
@@ -123,20 +127,22 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
       {/* stats */}
       <div className="stats-grid-modern">
+        {/* weight */}
         <div className="stat-card weight-card">
           <div className="stat-card-header"><span className="stat-icon">⚖️</span><h3>Current Weight</h3></div>
           <div className="stat-value-large">
-            {recentMeasurement ? kgToLbs(recentMeasurement.weight_kg) : profile ? kgToLbs(profile.current_weight_kg) : '---'}
-            <span className="stat-unit">lbs</span>
+            {currentWeightLbs ? `${currentWeightLbs} lbs` : '---'}
           </div>
-          <div className="stat-label">Target: {profile ? kgToLbs(profile.target_weight_kg) : '---'} lbs</div>
+          <div className="stat-label">
+            Target: {targetWeightLbs ? `${targetWeightLbs} lbs` : '---'}
+          </div>
         </div>
 
+        {/* calories */}
         <div className="stat-card calories-card">
           <div className="stat-card-header"><span className="stat-icon">🔥</span><h3>Today&apos;s Calories</h3></div>
           <div className="stat-value-large">
-            {todaysNutrition?.total_calories?.toFixed(0) || 0}
-            <span className="stat-unit">kcal</span>
+            {(todaysNutrition?.total_calories ?? 0).toFixed(0)} <span className="stat-unit">kcal</span>
           </div>
           <div className="progress-bar">
             <div
@@ -144,10 +150,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
               style={{
                 width: `${
                   tdeeData
-                    ? Math.min(
-                        ((todaysNutrition?.total_calories || 0) / tdeeData.maintenance_calories) * 100,
-                        100
-                      )
+                    ? Math.min(((todaysNutrition?.total_calories || 0) / tdeeData.maintenance_calories) * 100, 100)
                     : 0
                 }%`,
               }}
@@ -156,6 +159,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           <div className="stat-label">Goal: {tdeeData?.maintenance_calories?.toFixed(0) || '---'} kcal</div>
         </div>
 
+        {/* macros */}
         <div className="stat-card macros-card">
           <div className="stat-card-header"><span className="stat-icon">📊</span><h3>Macros Today</h3></div>
           <div className="macros-breakdown">
@@ -165,6 +169,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
+        {/* latest workout */}
         <div className="stat-card workout-card">
           <div className="stat-card-header"><span className="stat-icon">💪</span><h3>Latest Workout</h3></div>
           {latestWorkout ? (
@@ -184,7 +189,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
         </div>
       </div>
 
-      {/* calendar */}
+      {/* calendar (optional) */}
       <div className="calendar-section" style={{ marginTop: '32px', marginBottom: '32px' }}>
         <div className="section-header" style={{ marginBottom: '16px' }}><h2>Workout History</h2></div>
         <WorkoutCalendar workouts={calendarWorkouts} />
@@ -192,7 +197,10 @@ function DashboardPage({ user, onBack, onNavigate }) {
 
       {/* recent activity */}
       <div className="activity-section">
-        <div className="section-header"><h2>Recent Activity</h2><button className="view-all-btn" onClick={() => onNavigate('profile')}>View All →</button></div>
+        <div className="section-header">
+          <h2>Recent Activity</h2>
+          <button className="view-all-btn" onClick={() => onNavigate('profile')}>View All →</button>
+        </div>
         <div className="activity-feed">
           {todaysNutrition?.meals_logged > 0 && (
             <div className="activity-item">
@@ -224,7 +232,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
             </div>
           )}
           {!todaysNutrition?.meals_logged && !latestWorkout && !recentMeasurement && (
-            <div className="no-activity"><p>No recent activity. Start by logging a workout or meal!</p></div>
+            <div className="no-activity">
+              <p>Nothing logged yet. Start by logging a workout or meal!</p>
+            </div>
           )}
         </div>
       </div>
