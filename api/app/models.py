@@ -66,7 +66,7 @@ class ProfileBase(BaseModel):
     activity_level: Optional[ActivityLevel] = None
     fitness_goal: Optional[FitnessGoal] = None
     goal_intensity: Optional[int] = Field(None, ge=0, le=3)
-    target_calories: Optional[int] = None
+    target_calories: Optional[float] = Field(None, gt=0, le=6000)
 
 
 class ProfileCreate(ProfileBase):
@@ -189,15 +189,15 @@ class MealCreate(BaseModel):
 
 
 class MealOut(MealCreate):
-    id: str
-    user_id: str
-    total_calories: float
-    total_protein_g: float
-    total_carbs_g: float
-    total_fat_g: float
-    created_at: datetime
+  id: str
+  user_id: str
+  total_calories: float
+  total_protein_g: float
+  total_carbs_g: float
+  total_fat_g: float
+  created_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+  model_config = ConfigDict(from_attributes=True)
 
 
 # AI Coach Models

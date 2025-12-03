@@ -1,8 +1,8 @@
+# app/routers/profile.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from app.models import ProfileCreate, ProfileUpdate, ProfileOut
 from app.dependencies import get_current_user
 from app.database import get_database
-from bson import ObjectId
 from datetime import datetime
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
@@ -30,6 +30,8 @@ async def get_profile(current_user = Depends(get_current_user)):
         target_weight_kg=profile.get("target_weight_kg"),
         activity_level=profile.get("activity_level"),
         fitness_goal=profile.get("fitness_goal"),
+        goal_intensity=profile.get("goal_intensity"),
+        target_calories=profile.get("target_calories"),
         updated_at=profile["updated_at"]
     )
 
@@ -39,7 +41,6 @@ async def create_profile(profile: ProfileCreate, current_user = Depends(get_curr
     """Create user profile"""
     db = await get_database()
 
-    # Check if profile already exists
     existing_profile = await db.profiles.find_one({"user_id": str(current_user["_id"])})
     if existing_profile:
         raise HTTPException(
@@ -47,7 +48,6 @@ async def create_profile(profile: ProfileCreate, current_user = Depends(get_curr
             detail="Profile already exists. Use PUT to update."
         )
 
-    # Create profile
     profile_dict = profile.model_dump(exclude_none=True)
     profile_dict["user_id"] = str(current_user["_id"])
     profile_dict["updated_at"] = datetime.utcnow()
@@ -62,7 +62,6 @@ async def update_profile(profile: ProfileUpdate, current_user = Depends(get_curr
     """Update user profile"""
     db = await get_database()
 
-    # Get existing profile
     existing_profile = await db.profiles.find_one({"user_id": str(current_user["_id"])})
 
     if not existing_profile:
@@ -71,7 +70,6 @@ async def update_profile(profile: ProfileUpdate, current_user = Depends(get_curr
             detail="Profile not found. Please create a profile first."
         )
 
-    # Update profile
     update_data = profile.model_dump(exclude_none=True)
     update_data["updated_at"] = datetime.utcnow()
 
@@ -80,7 +78,6 @@ async def update_profile(profile: ProfileUpdate, current_user = Depends(get_curr
         {"$set": update_data}
     )
 
-    # Get updated profile
     updated_profile = await db.profiles.find_one({"user_id": str(current_user["_id"])})
 
     return ProfileOut(
@@ -92,6 +89,8 @@ async def update_profile(profile: ProfileUpdate, current_user = Depends(get_curr
         target_weight_kg=updated_profile.get("target_weight_kg"),
         activity_level=updated_profile.get("activity_level"),
         fitness_goal=updated_profile.get("fitness_goal"),
+        goal_intensity=updated_profile.get("goal_intensity"),
+        target_calories=updated_profile.get("target_calories"),
         updated_at=updated_profile["updated_at"]
     )
 

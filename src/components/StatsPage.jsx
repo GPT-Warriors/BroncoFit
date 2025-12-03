@@ -15,6 +15,7 @@ import apiService from '../services/api';
 import './StatsPage.css';
 
 const GOAL_OFFSETS = [250, 500, 750, 1000];
+const INTENSITY_LBS = [0.5, 1, 1.5, 2];
 
 function StatsPage({ onBack }) {
   const [profile, setProfile] = useState(null);
@@ -30,8 +31,8 @@ function StatsPage({ onBack }) {
   const [newWeight, setNewWeight] = useState('');
 
   const [editGoal, setEditGoal] = useState('maintain');
-  const [editActivity, setEditActivity] = useState('moderate');
-  const [goalIntensityIndex, setGoalIntensityIndex] = useState(1);
+  const [editActivity, setEditActivity] = useState('moderately_active');
+  const [editIntensity, setEditIntensity] = useState(1);
 
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
   const lbsToKg = (lbs) => lbs / 2.20462;
@@ -50,10 +51,10 @@ function StatsPage({ onBack }) {
   useEffect(() => {
     if (profile) {
       setEditGoal(profile.fitness_goal || 'maintain');
-      setEditActivity(profile.activity_level || 'moderate');
-      if (typeof profile.goal_intensity === 'number') {
-        setGoalIntensityIndex(profile.goal_intensity);
-      }
+      setEditActivity(profile.activity_level || 'moderately_active');
+      setEditIntensity(
+        typeof profile.goal_intensity === 'number' ? profile.goal_intensity : 1
+      );
     }
   }, [profile]);
 
@@ -124,42 +125,35 @@ function StatsPage({ onBack }) {
   // Handles updating profile goal and activity level
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-
-    let targetCalories = null;
-    if (tdeeData) {
-      const maintenance = tdeeData.maintenance_calories || 0;
-      let adjustment = 0;
+    try {
+      const maintenance = tdeeData?.maintenance_calories || 0;
+      let targetCalories = maintenance;
+      let intensityIndex = editGoal === 'maintain' ? 0 : Number(editIntensity) || 1;
 
       if (editGoal === 'lose_weight') {
-        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
-        adjustment = -offset;
+        const offset = GOAL_OFFSETS[intensityIndex] || 0;
+        targetCalories = maintenance ? Math.round(maintenance - offset) : 0;
       } else if (editGoal === 'gain_muscle') {
-        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
-        adjustment = offset;
+        const offset = GOAL_OFFSETS[intensityIndex] || 0;
+        targetCalories = maintenance ? Math.round(maintenance + offset) : 0;
       }
 
-      targetCalories = Math.round(maintenance + adjustment);
-    }
+      const payload = {
+        fitness_goal: editGoal,
+        activity_level: editActivity,
+        goal_intensity: editGoal === 'maintain' ? None : intensityIndex,
+        target_calories: targetCalories || None
+      };
 
-    const payload = {
-      fitness_goal: editGoal,
-      activity_level: editActivity
-    };
+      const cleanedPayload = Object.fromEntries(
+        Object.entries(payload).filter(([_, v]) => v !== undefined && v !== null)
+      );
 
-    if (editGoal !== 'maintain') {
-      payload.goal_intensity = goalIntensityIndex;
-    }
-
-    if (targetCalories != null) {
-      payload.target_calories = targetCalories;
-    }
-
-    try {
-      const updatedProfile = await apiService.updateProfile(payload);
+      const updatedProfile = await apiService.updateProfile(cleanedPayload);
 
       setProfile(updatedProfile);
 
-      const profileForCalc = { ...updatedProfile, activity_level: editActivity };
+      const profileForCalc = { ...updatedProfile, activity_level: updatedProfile.activity_level };
       await runCalculation(profileForCalc, measurements);
     } catch (error) {
       console.error('Update failed', error);
@@ -200,33 +194,30 @@ function StatsPage({ onBack }) {
   let goalLabel = 'Target';
 
   if (profile && tdeeData) {
-    const maintenance = tdeeData.maintenance_calories || 0;
+    const goal = (profile.fitness_goal || 'maintain').toLowerCase();
+    const maintenance = tdeeData.maintenance_calories;
+    const intensityIndex =
+      typeof profile.goal_intensity === 'number' ? profile.goal_intensity : 1;
+    const offset = GOAL_OFFSETS[intensityIndex] || 0;
 
-    if (profile.target_calories) {
-      goalCalories = profile.target_calories;
+    if (goal.includes('lose') || goal.includes('cut')) {
+      goalCalories =
+        profile.target_calories ||
+        (maintenance ? Math.round(maintenance - offset) : tdeeData.weight_loss_calories);
+      goalLabel = 'Target (Cut)';
+    } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
+      goalCalories =
+        profile.target_calories ||
+        (maintenance ? Math.round(maintenance + offset) : tdeeData.weight_gain_calories);
+      goalLabel = 'Target (Bulk)';
     } else {
-      const goal = (profile.fitness_goal || 'maintain').toLowerCase();
-      let adjustment = 0;
-
-      if (goal.includes('lose') || goal.includes('cut')) {
-        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
-        adjustment = -offset;
-        goalLabel = 'Target (Cut)';
-      } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
-        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
-        adjustment = offset;
-        goalLabel = 'Target (Bulk)';
-      } else {
-        adjustment = 0;
-        goalLabel = 'Target (Maintain)';
-      }
-
-      goalCalories = Math.round(maintenance + adjustment);
+      goalCalories = profile.target_calories || maintenance || tdeeData.maintenance_calories;
+      goalLabel = 'Target (Maintain)';
     }
   }
 
-  if (!goalCalories && tdeeData?.maintenance_calories && goalLabel === 'Target (Maintain)') {
-    goalCalories = Math.round(tdeeData.maintenance_calories);
+  if (!goalCalories && tdeeData?.maintenance_calories) {
+    goalCalories = tdeeData.maintenance_calories;
   }
 
   if (loading) {
@@ -238,28 +229,6 @@ function StatsPage({ onBack }) {
       </div>
     );
   }
-
-  const renderGoalIntensitySelect = () => {
-    if (editGoal === 'maintain') return null;
-
-    const prefix = editGoal === 'lose_weight' ? 'Cut' : 'Bulk';
-
-    return (
-      <div className="quick-form-group goal-intensity-group">
-        <label htmlFor="goal-intensity-select">Goal Intensity</label>
-        <select
-          id="goal-intensity-select"
-          value={goalIntensityIndex}
-          onChange={(e) => setGoalIntensityIndex(parseInt(e.target.value, 10))}
-        >
-          <option value={0}>{`${prefix} (0.5 lb/week)`}</option>
-          <option value={1}>{`${prefix} (1.0 lb/week)`}</option>
-          <option value={2}>{`${prefix} (1.5 lb/week)`}</option>
-          <option value={3}>{`${prefix} (2.0 lb/week)`}</option>
-        </select>
-      </div>
-    );
-  };
 
   return (
     <div className="stats-page">
@@ -321,15 +290,39 @@ function StatsPage({ onBack }) {
                   onChange={(e) => setEditActivity(e.target.value)}
                 >
                   <option value="sedentary">Sedentary</option>
-                  <option value="light">Lightly Active (1-3 days/week)</option>
-                  <option value="moderate">Moderately Active (3-5 days/week)</option>
-                  <option value="active">Very Active (6-7 days/week)</option>
-                  <option value="very_active">Extra Active (Physical job + training)</option>
+                  <option value="lightly_active">Lightly Active (1-3 days/week)</option>
+                  <option value="moderately_active">Moderately Active (3-5 days/week)</option>
+                  <option value="very_active">Very Active (6-7 days/week)</option>
+                  <option value="extra_active">Extra Active (Physical job + training)</option>
                 </select>
               </div>
             </div>
 
-            {renderGoalIntensitySelect()}
+            {editGoal !== 'maintain' && (
+              <div className="quick-form-inline">
+                <div className="quick-form-group">
+                  <label htmlFor="goal-intensity">Goal Intensity</label>
+                  <select
+                    id="goal-intensity"
+                    value={editIntensity}
+                    onChange={(e) => setEditIntensity(Number(e.target.value))}
+                  >
+                    <option value={0}>
+                      {editGoal === 'lose_weight' ? 'Cut (0.5 lb/week)' : 'Bulk (0.5 lb/week)'}
+                    </option>
+                    <option value={1}>
+                      {editGoal === 'lose_weight' ? 'Cut (1 lb/week)' : 'Bulk (1 lb/week)'}
+                    </option>
+                    <option value={2}>
+                      {editGoal === 'lose_weight' ? 'Cut (1.5 lb/week)' : 'Bulk (1.5 lb/week)'}
+                    </option>
+                    <option value={3}>
+                      {editGoal === 'lose_weight' ? 'Cut (2 lb/week)' : 'Bulk (2 lb/week)'}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="quick-form-actions">
               <button type="submit" className="btn-secondary">
