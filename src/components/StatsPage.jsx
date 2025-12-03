@@ -28,7 +28,7 @@ function StatsPage({ onBack }) {
   const [newWeight, setNewWeight] = useState('');
 
   const [editGoal, setEditGoal] = useState('maintain');
-  const [editActivity, setEditActivity] = useState('moderately_active');
+  const [editActivity, setEditActivity] = useState('moderate');
 
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
   const lbsToKg = (lbs) => lbs / 2.20462;
@@ -47,7 +47,7 @@ function StatsPage({ onBack }) {
   useEffect(() => {
     if (profile) {
       setEditGoal(profile.fitness_goal || 'maintain');
-      setEditActivity(profile.activity_level || 'moderately_active');
+      setEditActivity(profile.activity_level || 'moderate');
     }
   }, [profile]);
 
@@ -255,10 +255,10 @@ function StatsPage({ onBack }) {
                   onChange={(e) => setEditActivity(e.target.value)}
                 >
                   <option value="sedentary">Sedentary</option>
-                  <option value="lightly_active">Lightly Active (1-3 days/week)</option>
-                  <option value="moderately_active">Moderately Active (3-5 days/week)</option>
-                  <option value="very_active">Very Active (6-7 days/week)</option>
-                  <option value="extra_active">Extra Active (Physical job + training)</option>
+                  <option value="light">Lightly Active (1-3 days/week)</option>
+                  <option value="moderate">Moderately Active (3-5 days/week)</option>
+                  <option value="active">Very Active (6-7 days/week)</option>
+                  <option value="very_active">Extra Active (Physical job + training)</option>
                 </select>
               </div>
             </div>
@@ -285,8 +285,8 @@ function StatsPage({ onBack }) {
               {measurements[0]
                 ? kgToLbs(measurements[0].weight_kg)
                 : profile
-                ? kgToLbs(profile.current_weight_kg)
-                : '---'}{' '}
+                  ? kgToLbs(profile.current_weight_kg)
+                  : '---'}{' '}
               lbs
             </span>
           </div>
@@ -349,6 +349,7 @@ function StatsPage({ onBack }) {
                 />
               </LineChart>
             </ResponsiveContainer>
+
           </div>
         </div>
       )}

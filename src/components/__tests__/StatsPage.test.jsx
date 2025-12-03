@@ -155,7 +155,12 @@ describe('StatsPage', () => {
       fireEvent.click(updateButton);
 
       await waitFor(() => {
-        expect(apiService.updateProfile).toHaveBeenCalledTimes(1);
+        expect(apiService.updateProfile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            fitness_goal: 'gain_muscle',
+            activity_level: 'moderate',
+          }),
+        );
       });
     });
   });
