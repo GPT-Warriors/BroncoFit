@@ -11,7 +11,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [latestWorkout, setLatestWorkout] = useState(null);
   const [recentMeasurement, setRecentMeasurement] = useState(null);
   const [tdeeData, setTdeeData] = useState(null);
-  const [calendarWorkouts, setCalendarWorkouts] = useState([]); // for calendar dots/details
+  const [calendarWorkouts, setCalendarWorkouts] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -22,7 +22,16 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // critical: include getLatestWorkout so tests that mock it will pass
+      const getLatestWorkoutSafe =
+        typeof apiService.getLatestWorkout === 'function'
+          ? apiService.getLatestWorkout
+          : async () => null;
+
+      const getWorkoutsSafe =
+        typeof apiService.getWorkouts === 'function'
+          ? apiService.getWorkouts
+          : async () => [];
+
       const [
         profileRes,
         nutritionRes,
@@ -33,8 +42,8 @@ function DashboardPage({ user, onBack, onNavigate }) {
         apiService.getProfile(),
         apiService.getTodaysNutritionSummary(),
         apiService.getLatestMeasurement(),
-        apiService.getLatestWorkout(),
-        apiService.getWorkouts()
+        getLatestWorkoutSafe(),
+        getWorkoutsSafe()
       ]);
 
       if (profileRes.status === 'fulfilled') {
@@ -45,42 +54,43 @@ function DashboardPage({ user, onBack, onNavigate }) {
         }
       }
 
-      if (nutritionRes.status === 'fulfilled') setTodaysNutrition(nutritionRes.value || null);
-      if (measurementRes.status === 'fulfilled') setRecentMeasurement(measurementRes.value || null);
+      if (nutritionRes.status === 'fulfilled') {
+        setTodaysNutrition(nutritionRes.value || null);
+      }
 
-      // set latest workout from dedicated endpoint first
+      if (measurementRes.status === 'fulfilled') {
+        setRecentMeasurement(measurementRes.value || null);
+      }
+
       if (latestWorkoutRes.status === 'fulfilled') {
         setLatestWorkout(latestWorkoutRes.value || null);
       }
 
-      // calendar + fallback latest workout from history
       if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
         const rawWorkouts = workoutsRes.value;
 
-        if (!latestWorkoutRes || latestWorkoutRes.status !== 'fulfilled') {
-          if (rawWorkouts.length > 0) {
-            const sorted = [...rawWorkouts].sort(
-              (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
-            );
-            setLatestWorkout(sorted[0]);
-          }
+        if ((!latestWorkoutRes || latestWorkoutRes.status !== 'fulfilled') && rawWorkouts.length > 0) {
+          const sorted = [...rawWorkouts].sort(
+            (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
+          );
+          setLatestWorkout(sorted[0]);
         }
 
         const formattedForCalendar = rawWorkouts.map((w) => {
-          const dateObj = new Date(w.workout_date);
-          const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+          const d = new Date(w.workout_date);
+          const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
           return {
             id: w.id || w._id || Math.random(),
             title: w.workout_name,
-            date: dateStr,
+            date: mmddyyyy,
             duration: (w.duration_minutes || 0) + ' min',
             exercises: w.exercises?.length || 0,
             details:
               w.exercises?.map((ex) => {
-                let d = ex.exercise_name;
-                if (ex.sets && ex.reps) d += ` (${ex.sets}×${ex.reps})`;
-                if (ex.weight_kg) d += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
-                return d;
+                let str = ex.exercise_name;
+                if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
+                if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
+                return str;
               }) || []
           };
         });
@@ -104,11 +114,12 @@ function DashboardPage({ user, onBack, onNavigate }) {
     );
   }
 
-  const currentWeightLbs = recentMeasurement
-    ? kgToLbs(recentMeasurement.weight_kg)
-    : profile
-    ? kgToLbs(profile.current_weight_kg)
-    : null;
+  const currentWeightLbs =
+    recentMeasurement
+      ? kgToLbs(recentMeasurement.weight_kg)
+      : profile
+      ? kgToLbs(profile.current_weight_kg)
+      : null;
 
   const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : null;
 
@@ -148,7 +159,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
             <span className="stat-unit">lbs</span>
           </div>
           <div className="stat-label">
-            Target: {targetWeightLbs ? `${targetWeightLbs} lbs` : '---'} lbs
+            Target: {targetWeightLbs || '---'} lbs
           </div>
         </div>
 
