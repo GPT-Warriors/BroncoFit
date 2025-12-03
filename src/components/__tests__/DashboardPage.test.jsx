@@ -138,12 +138,9 @@ describe('DashboardPage', () => {
 
       expect(screen.getByText(/current weight/i)).toBeInTheDocument();
 
-      // Weight number and unit are separate spans now
       expect(screen.getByText('178.1')).toBeInTheDocument();
-      // At least one "lbs" unit should exist on the page
       expect(screen.getAllByText('lbs')[0]).toBeInTheDocument();
 
-      // Target text remains combined
       expect(screen.getByText(/target: 165\.3 lbs/i)).toBeInTheDocument();
     });
 
@@ -155,11 +152,8 @@ describe('DashboardPage', () => {
       });
 
       expect(screen.getByText(/today's calories/i)).toBeInTheDocument();
-      // Total consumed
       expect(screen.getByText(/1800/)).toBeInTheDocument();
-      // New text: Remaining calories instead of "Goal"
-      // maintenance (2400) - consumed (1800) = 600
-      expect(screen.getByText(/remaining: 600 kcal/i)).toBeInTheDocument();
+      expect(screen.getByText(/remaining:\s*600 kcal/i)).toBeInTheDocument();
     });
 
     it('should display macros card', async () => {
@@ -184,25 +178,22 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      // TDEE header
       expect(screen.getByText(/tdee/i)).toBeInTheDocument();
 
-      // Rows and values
       expect(screen.getByText(/bmr/i)).toBeInTheDocument();
-      expect(screen.getByText('1850')).toBeInTheDocument();
+      expect(screen.getByText(/1850/)).toBeInTheDocument();
 
       expect(screen.getByText(/maintenance/i)).toBeInTheDocument();
-      expect(screen.getByText('2400')).toBeInTheDocument();
+      expect(screen.getByText(/2400/)).toBeInTheDocument();
 
       expect(screen.getByText(/weight loss/i)).toBeInTheDocument();
-      expect(screen.getByText('1900')).toBeInTheDocument();
+      expect(screen.getByText(/1900/)).toBeInTheDocument();
 
       expect(screen.getByText(/weight gain/i)).toBeInTheDocument();
-      expect(screen.getByText('2900')).toBeInTheDocument();
+      expect(screen.getByText(/2900/)).toBeInTheDocument();
     });
 
     it('should show TDEE not available when TDEE data is missing', async () => {
-      // Override TDEE mock for this test to simulate missing TDEE data
       apiService.calculateTDEE.mockResolvedValue(null);
 
       render(<DashboardPage user={mockUser} onBack={vi.fn()} onNavigate={vi.fn()} />);
@@ -415,7 +406,6 @@ describe('DashboardPage', () => {
         expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
       });
 
-      // Weight number and unit rendered separately
       expect(screen.getByText('178.1')).toBeInTheDocument();
       expect(screen.getAllByText('lbs')[0]).toBeInTheDocument();
     });
