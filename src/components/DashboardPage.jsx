@@ -16,21 +16,11 @@ function DashboardPage({ user, onBack, onNavigate }) {
     loadDashboardData();
   }, []);
 
-  const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
+  const kgToLbs = (kg) => (kg ? (kg * 2.20462).toFixed(1) : '---');
 
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const getLatestWorkoutSafe =
-        typeof apiService.getLatestWorkout === 'function'
-          ? apiService.getLatestWorkout
-          : async () => null;
-
-      const getWorkoutsSafe =
-        typeof apiService.getWorkouts === 'function'
-          ? apiService.getWorkouts
-          : async () => [];
-
       const [
         profileRes,
         nutritionRes,
@@ -41,73 +31,85 @@ function DashboardPage({ user, onBack, onNavigate }) {
         apiService.getProfile(),
         apiService.getTodaysNutritionSummary(),
         apiService.getLatestMeasurement(),
-        getLatestWorkoutSafe(),
-        getWorkoutsSafe(),
+        apiService.getLatestWorkout(),
+        apiService.getWorkouts(100, 0), 
       ]);
 
-      // Profile + TDEE
-      if (profileRes.status === 'fulfilled') {
-        setProfile(profileRes.value);
+      // --- HANDLE PROFILE & TDEE ---
+      if (profileRes.status === 'fulfilled' && profileRes.value) {
+        const p = profileRes.value;
+        setProfile(p);
 
-        if (profileRes.value) {
-          const tdee = await apiService.calculateTDEE({
-            age: profileRes.value.age,
-            sex: profileRes.value.sex,
-            height_cm: profileRes.value.height_cm,
-            weight_kg: profileRes.value.current_weight_kg,
-            activity_level: profileRes.value.activity_level,
-          });
-          setTdeeData(tdee);
+        // Calculate TDEE if we have enough data
+        if (p.current_weight_kg && p.height_cm && p.age && p.sex && p.activity_level) {
+            try {
+                const tdee = await apiService.calculateTDEE({
+                    age: p.age,
+                    sex: p.sex,
+                    height_cm: p.height_cm,
+                    weight_kg: p.current_weight_kg,
+                    activity_level: p.activity_level,
+                });
+                setTdeeData(tdee);
+            } catch (err) {
+                console.warn("Failed to calc TDEE:", err);
+            }
         }
       }
 
-      // Nutrition
+      // --- HANDLE NUTRITION ---
       if (nutritionRes.status === 'fulfilled') {
         setTodaysNutrition(nutritionRes.value);
       }
 
-      // Measurement
+      // --- HANDLE MEASUREMENT ---
       if (measurementRes.status === 'fulfilled') {
         setRecentMeasurement(measurementRes.value);
       }
 
-      // Latest workout (single)
-      if (latestWorkoutRes.status === 'fulfilled') {
-        setLatestWorkout(latestWorkoutRes.value);
-      }
-
-      // All workouts -> calendar + fallback latest
+      // --- HANDLE WORKOUTS ---
+      let rawWorkouts = [];
       if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
-        const rawWorkouts = workoutsRes.value;
-
-        if ((!latestWorkoutRes || latestWorkoutRes.status !== 'fulfilled') && rawWorkouts.length > 0) {
-          const sorted = [...rawWorkouts].sort(
-            (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
-          );
-          setLatestWorkout(sorted[0]);
-        }
-
-        const formattedForCalendar = rawWorkouts.map((w) => {
-          const d = new Date(w.workout_date);
-          const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-          return {
-            id: w.id || w._id || Math.random(),
-            title: w.workout_name,
-            date: mmddyyyy,
-            duration: (w.duration_minutes || 0) + ' min',
-            exercises: w.exercises?.length || 0,
-            details:
-              w.exercises?.map((ex) => {
-                let str = ex.exercise_name;
-                if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
-                if (ex.weight_kg) str += ` @ ${(ex.weight_kg * 2.20462).toFixed(1)}lbs`;
-                return str;
-              }) || [],
-          };
-        });
-
-        setCalendarWorkouts(formattedForCalendar);
+        rawWorkouts = workoutsRes.value;
       }
+
+      // Determine Latest Workout
+      let finalLatest = null;
+      if (latestWorkoutRes.status === 'fulfilled' && latestWorkoutRes.value) {
+        finalLatest = latestWorkoutRes.value;
+      } else if (rawWorkouts.length > 0) {
+        // Sort descending by date
+        const sorted = [...rawWorkouts].sort(
+          (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
+        );
+        finalLatest = sorted[0];
+      }
+      setLatestWorkout(finalLatest);
+
+      const formattedForCalendar = rawWorkouts.map((w) => {
+        // Handle potentially different date formats (ISO string vs Date object)
+        const d = new Date(w.workout_date);
+        
+        // Format as MM/DD/YYYY
+        const mmddyyyy = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+
+        return {
+          id: w.id || w._id || Math.random(), 
+          title: w.workout_name,
+          date: mmddyyyy, 
+          duration: (w.duration_minutes || 0) + ' min',
+          exercises: w.exercises?.length || 0,
+          // Create simple string details for the popup
+          details: w.exercises?.map((ex) => {
+              let str = ex.exercise_name || "Exercise";
+              if (ex.sets && ex.reps) str += ` (${ex.sets}×${ex.reps})`;
+              return str;
+            }) || [],
+        };
+      });
+
+      setCalendarWorkouts(formattedForCalendar);
+
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -126,14 +128,8 @@ function DashboardPage({ user, onBack, onNavigate }) {
     );
   }
 
-  const currentWeightLbs =
-    recentMeasurement
-      ? kgToLbs(recentMeasurement.weight_kg)
-      : profile
-      ? kgToLbs(profile.current_weight_kg)
-      : '---';
-
-  const targetWeightLbs = profile ? kgToLbs(profile.target_weight_kg) : '---';
+  const currentWeightLbs = kgToLbs(recentMeasurement?.weight_kg || profile?.current_weight_kg);
+  const targetWeightLbs = kgToLbs(profile?.target_weight_kg);
 
   const consumed = todaysNutrition?.total_calories ?? 0;
   const maintenance = tdeeData?.maintenance_calories ?? 0;
@@ -183,10 +179,10 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
           <div className="stat-value-large">
             {currentWeightLbs}
-            <span className="stat-unit">lbs</span>
+            <span className="stat-unit">{currentWeightLbs !== '---' ? 'lbs' : ''}</span>
           </div>
           <div className="stat-label">
-            Target: {targetWeightLbs} lbs
+            Target: {targetWeightLbs} {targetWeightLbs !== '---' ? 'lbs' : ''}
           </div>
         </div>
 
@@ -254,25 +250,21 @@ function DashboardPage({ user, onBack, onNavigate }) {
           {tdeeData ? (
             <div className="tdee-summary">
               <div className="tdee-row">
-                <span className="tdee-label">BMR</span>
-                <span className="tdee-value">{Math.round(tdeeData.bmr)} kcal</span>
-              </div>
-              <div className="tdee-row">
                 <span className="tdee-label">Maintenance</span>
                 <span className="tdee-value">
-                  {Math.round(tdeeData.maintenance_calories)} kcal
+                  {Math.round(tdeeData.maintenance_calories)}
                 </span>
               </div>
               <div className="tdee-row">
-                <span className="tdee-label">Weight Loss</span>
+                <span className="tdee-label">Cut</span>
                 <span className="tdee-value">
-                  {Math.round(tdeeData.weight_loss_calories)} kcal
+                  {Math.round(tdeeData.weight_loss_calories)}
                 </span>
               </div>
               <div className="tdee-row">
-                <span className="tdee-label">Weight Gain</span>
+                <span className="tdee-label">Bulk</span>
                 <span className="tdee-value">
-                  {Math.round(tdeeData.weight_gain_calories)} kcal
+                  {Math.round(tdeeData.weight_gain_calories)}
                 </span>
               </div>
             </div>
