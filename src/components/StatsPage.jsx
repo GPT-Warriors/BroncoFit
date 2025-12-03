@@ -136,20 +136,24 @@ function StatsPage({ onBack }) {
       } else if (editGoal === 'gain_muscle') {
         const offset = GOAL_OFFSETS[intensityIndex] || 0;
         targetCalories = maintenance ? Math.round(maintenance + offset) : 0;
+      } else {
+        targetCalories = maintenance ? Math.round(maintenance) : 0;
       }
 
       const payload = {
         fitness_goal: editGoal,
-        activity_level: editActivity,
-        goal_intensity: editGoal === 'maintain' ? None : intensityIndex,
-        target_calories: targetCalories || None
+        activity_level: editActivity
       };
 
-      const cleanedPayload = Object.fromEntries(
-        Object.entries(payload).filter(([_, v]) => v !== undefined && v !== null)
-      );
+      if (editGoal !== 'maintain') {
+        payload.goal_intensity = intensityIndex;
+      }
 
-      const updatedProfile = await apiService.updateProfile(cleanedPayload);
+      if (targetCalories) {
+        payload.target_calories = targetCalories;
+      }
+
+      const updatedProfile = await apiService.updateProfile(payload);
 
       setProfile(updatedProfile);
 
