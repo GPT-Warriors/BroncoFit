@@ -8,12 +8,22 @@ function StatsPage({ onBack }) {
   const [measurements, setMeasurements] = useState([]);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('weight'); // weight, workouts, nutrition, prs
   const [tdeeData, setTdeeData] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('weight');
   const [expandedWorkouts, setExpandedWorkouts] = useState({});
 
+  const [showWeightModal, setShowWeightModal] = useState(false);
+  const [newWeight, setNewWeight] = useState('');
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [editGoal, setEditGoal] = useState('maintain');
+  const [editActivity, setEditActivity] = useState('moderately_active');
+
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
+  const lbsToKg = (lbs) => lbs / 2.20462;
+
   const cmToFeetInches = (cm) => {
     const totalInches = cm / 2.54;
     const feet = Math.floor(totalInches / 12);
@@ -33,7 +43,7 @@ function StatsPage({ onBack }) {
         apiService.getProfile(),
         apiService.getMeasurements(30),
         apiService.getWorkouts(20),
-        apiService.getMeals(30)
+        apiService.getMeals(30),
       ]);
 
       setProfile(profileData);
@@ -41,13 +51,19 @@ function StatsPage({ onBack }) {
       setWorkouts(workoutData || []);
       setMeals(mealData || []);
 
-      // Calculate TDEE
       if (profileData) {
+        setEditGoal(profileData.fitness_goal || 'maintain');
+        setEditActivity(profileData.activity_level || 'moderately_active');
+      }
+
+      if (profileData) {
+        const weightForCalc = measurementData?.[0]?.weight_kg || profileData.current_weight_kg;
+
         const tdee = await apiService.calculateTDEE({
           age: profileData.age,
           sex: profileData.sex,
           height_cm: profileData.height_cm,
-          weight_kg: measurementData?.[0]?.weight_kg || profileData.current_weight_kg,
+          weight_kg: weightForCalc,
           activity_level: profileData.activity_level,
         });
         setTdeeData(tdee);
@@ -59,21 +75,62 @@ function StatsPage({ onBack }) {
     }
   };
 
-  // Prepare weight chart data
+  const handleAddWeight = async (e) => {
+    e.preventDefault();
+    if (!newWeight) return;
+
+    try {
+      const weightKg = lbsToKg(parseFloat(newWeight));
+      await apiService.addMeasurement({
+        weight_kg: weightKg,
+        measurement_date: new Date().toISOString(),
+        notes: 'Manual entry from Stats',
+      });
+
+      setNewWeight('');
+      setShowWeightModal(false);
+      await loadAllData();
+    } catch (error) {
+      console.error('Failed to add weight', error);
+      alert('Failed to save weight. Please try again.');
+    }
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      await apiService.updateProfile({
+        fitness_goal: editGoal,
+        activity_level: editActivity,
+      });
+
+      setShowProfileModal(false);
+      await loadAllData();
+    } catch (error) {
+      console.error('Failed to update profile', error);
+      alert('Failed to update profile.');
+    }
+  };
+
   const weightChartData = measurements
     .slice()
     .reverse()
-    .map(m => ({
-      date: new Date(m.measurement_date || m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    .map((m) => ({
+      date: new Date(m.measurement_date || m.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
       weight: parseFloat(kgToLbs(m.weight_kg)),
-      target: parseFloat(kgToLbs(profile?.target_weight_kg || 0))
+      target: parseFloat(kgToLbs(profile?.target_weight_kg || 0)),
     }));
 
-  // Prepare nutrition chart data (last 7 days)
   const nutritionChartData = meals
     .reduce((acc, meal) => {
-      const date = new Date(meal.meal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const existing = acc.find(d => d.date === date);
+      const date = new Date(meal.meal_date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+      const existing = acc.find((d) => d.date === date);
 
       if (existing) {
         existing.calories += meal.total_calories;
@@ -86,7 +143,7 @@ function StatsPage({ onBack }) {
           calories: meal.total_calories,
           protein: meal.total_protein_g,
           carbs: meal.total_carbs_g,
-          fat: meal.total_fat_g
+          fat: meal.total_fat_g,
         });
       }
       return acc;
@@ -94,32 +151,19 @@ function StatsPage({ onBack }) {
     .slice(0, 7)
     .reverse();
 
-  // Calculate PRs from workouts
-  const calculatePRs = () => {
-    const prs = {};
+  let goalCalories = tdeeData?.maintenance_calories || 0;
+  let goalLabel = 'Target (Maintain)';
 
-    workouts.forEach(workout => {
-      workout.exercises?.forEach(exercise => {
-        if (exercise.exercise_type === 'strength' && exercise.weight_kg) {
-          const key = exercise.exercise_name.toLowerCase();
-          const weightLbs = parseFloat(kgToLbs(exercise.weight_kg));
-
-          if (!prs[key] || weightLbs > prs[key].weight) {
-            prs[key] = {
-              name: exercise.exercise_name,
-              weight: weightLbs,
-              reps: exercise.reps,
-              date: workout.workout_date
-            };
-          }
-        }
-      });
-    });
-
-    return Object.values(prs).sort((a, b) => b.weight - a.weight).slice(0, 10);
-  };
-
-  const personalRecords = calculatePRs();
+  if (profile?.fitness_goal && tdeeData) {
+    const goal = profile.fitness_goal.toLowerCase();
+    if (goal.includes('lose') || goal.includes('cut')) {
+      goalCalories = tdeeData.weight_loss_calories;
+      goalLabel = 'Target (Cut)';
+    } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
+      goalCalories = tdeeData.weight_gain_calories;
+      goalLabel = 'Target (Bulk)';
+    }
+  }
 
   if (loading) {
     return (
@@ -138,33 +182,58 @@ function StatsPage({ onBack }) {
         ← Back
       </button>
 
-      {/* Header */}
       <div className="stats-header">
         <h1>📊 Your Stats</h1>
         <p>Track your progress and achievements</p>
       </div>
 
-      {/* Profile Summary */}
       <div className="profile-summary-card">
-        <div className="summary-item">
-          <span className="summary-label">Height</span>
-          <span className="summary-value">{profile ? cmToFeetInches(profile.height_cm) : '---'}</span>
+        <div className="summary-actions">
+          <button
+            className="icon-btn"
+            onClick={() => setShowProfileModal(true)}
+            title="Edit Goals & Activity"
+          >
+            ✏️ Edit Profile
+          </button>
         </div>
-        <div className="summary-item">
-          <span className="summary-label">Current Weight</span>
-          <span className="summary-value">{measurements[0] ? kgToLbs(measurements[0].weight_kg) : profile ? kgToLbs(profile.current_weight_kg) : '---'} lbs</span>
-        </div>
-        <div className="summary-item">
-          <span className="summary-label">Target Weight</span>
-          <span className="summary-value">{profile ? kgToLbs(profile.target_weight_kg) : '---'} lbs</span>
-        </div>
-        <div className="summary-item">
-          <span className="summary-label">TDEE</span>
-          <span className="summary-value">{tdeeData ? tdeeData.maintenance_calories.toFixed(0) : '---'} cal</span>
+
+        <div className="summary-row">
+          <div className="summary-item">
+            <span className="summary-label">Height</span>
+            <span className="summary-value">
+              {profile ? cmToFeetInches(profile.height_cm) : '---'}
+            </span>
+          </div>
+
+          <div className="summary-item clickable" onClick={() => setShowWeightModal(true)}>
+            <span className="summary-label">Current Weight 📝</span>
+            <span className="summary-value">
+              {measurements[0]
+                ? kgToLbs(measurements[0].weight_kg)
+                : profile
+                ? kgToLbs(profile.current_weight_kg)
+                : '---'}{' '}
+              lbs
+            </span>
+          </div>
+
+          <div className="summary-item">
+            <span className="summary-label">Maintenance</span>
+            <span className="summary-value">
+              {tdeeData ? Math.round(tdeeData.maintenance_calories) : '---'} cal
+            </span>
+          </div>
+
+          <div className="summary-item highlight">
+            <span className="summary-label">{goalLabel}</span>
+            <span className="summary-value accent">
+              {goalCalories ? Math.round(goalCalories) : '---'} cal
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="stats-tabs">
         <button
           className={`tab-btn ${activeTab === 'weight' ? 'active' : ''}`}
@@ -184,219 +253,179 @@ function StatsPage({ onBack }) {
         >
           🍽️ Nutrition
         </button>
-        <button
-          className={`tab-btn ${activeTab === 'prs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('prs')}
-        >
-          🏆 PRs
-        </button>
       </div>
 
-      {/* Tab Content */}
       <div className="tab-content">
         {activeTab === 'weight' && (
           <div className="weight-tab">
-            <h2>Weight Progress</h2>
+            <div className="section-header-row">
+              <h2>Weight Progress</h2>
+              <button className="action-btn-small" onClick={() => setShowWeightModal(true)}>
+                + Log Weight
+              </button>
+            </div>
+
             {weightChartData.length > 0 ? (
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height={350}>
                   <LineChart data={weightChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                     <XAxis dataKey="date" stroke="#b0b0b0" />
-                    <YAxis stroke="#b0b0b0" />
+                    <YAxis stroke="#b0b0b0" domain={['auto', 'auto']} />
                     <Tooltip
-                      contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
+                      contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }}
                       labelStyle={{ color: '#fff' }}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="weight" stroke="#00FF6A" strokeWidth={3} dot={{ fill: '#00FF6A', r: 5 }} name="Current Weight (lbs)" />
-                    <Line type="monotone" dataKey="target" stroke="#EEC97D" strokeWidth={2} strokeDasharray="5 5" dot={false} name="Target Weight (lbs)" />
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#00FF6A"
+                      strokeWidth={3}
+                      dot={{ fill: '#00FF6A' }}
+                      name="Weight (lbs)"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="target"
+                      stroke="#EEC97D"
+                      strokeDasharray="5 5"
+                      name="Target (lbs)"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
               <div className="no-data">
-                <p>No weight measurements yet. Start tracking your progress!</p>
+                <p>No data. Log your weight to see the graph!</p>
               </div>
             )}
+          </div>
+        )}
 
-            {/* Recent Measurements */}
-            <div className="measurements-list">
-              <h3>Recent Measurements</h3>
-              {measurements.slice(0, 5).map((m, i) => (
-                <div key={i} className="measurement-item">
-                  <span className="measurement-date">
-                    {new Date(m.measurement_date || m.created_at).toLocaleDateString()}
-                  </span>
-                  <span className="measurement-weight">{kgToLbs(m.weight_kg)} lbs</span>
-                  {m.notes && <span className="measurement-notes">{m.notes}</span>}
+        {activeTab === 'workouts' && (
+          <div className="workouts-tab">
+            <h2>Recent Workouts</h2>
+            {workouts.length === 0 && (
+              <div className="no-data">
+                <p>No workouts found.</p>
+              </div>
+            )}
+            <div className="workout-timeline">
+              {workouts.map((w, i) => (
+                <div key={i} className="workout-item">
+                  <div className="workout-header">
+                    <h4>{w.workout_name}</h4>
+                    <span className="workout-date">
+                      {new Date(w.workout_date).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {activeTab === 'workouts' && (
-          <div className="workouts-tab">
-            <h2>Workout History</h2>
-            {workouts.length > 0 ? (
-              <div className="workout-timeline">
-                {workouts.map((workout, i) => {
-                  const workoutId = workout.id || `workout-${i}`;
-                  const isExpanded = expandedWorkouts[workoutId];
-
-                  return (
-                    <div key={i} className={`workout-item ${isExpanded ? 'expanded' : ''}`}>
-                      <div
-                        className="workout-header-clickable"
-                        onClick={() => setExpandedWorkouts(prev => ({
-                          ...prev,
-                          [workoutId]: !prev[workoutId]
-                        }))}
-                      >
-                        <div className="workout-header">
-                          <h4>{workout.workout_name}</h4>
-                          <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
-                        </div>
-                        <span className="workout-date">
-                          {new Date(workout.workout_date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="workout-details">
-                        <span>{workout.exercises?.length || 0} exercises</span>
-                        {workout.duration_minutes && <span>• {workout.duration_minutes} min</span>}
-                      </div>
-
-                      {isExpanded ? (
-                        <div className="workout-exercises-expanded">
-                          {workout.exercises?.map((ex, j) => (
-                            <div key={j} className="exercise-detail-item">
-                              <div className="exercise-detail-header">
-                                <span className="exercise-number">{j + 1}</span>
-                                <span className="exercise-name">{ex.exercise_name}</span>
-                                <span className={`exercise-type-badge ${ex.exercise_type}`}>
-                                  {ex.exercise_type}
-                                </span>
-                              </div>
-                              <div className="exercise-stats">
-                                {ex.sets && ex.reps && (
-                                  <span className="stat">{ex.sets} sets × {ex.reps} reps</span>
-                                )}
-                                {ex.weight_kg && (
-                                  <span className="stat weight">@ {kgToLbs(ex.weight_kg)} lbs</span>
-                                )}
-                                {ex.duration_minutes && (
-                                  <span className="stat">{ex.duration_minutes} min</span>
-                                )}
-                              </div>
-                              {ex.notes && <div className="exercise-notes">{ex.notes}</div>}
-                            </div>
-                          ))}
-                          {workout.notes && (
-                            <div className="workout-notes-section">
-                              <strong>Notes:</strong> {workout.notes}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="workout-exercises">
-                          {workout.exercises?.slice(0, 3).map((ex, j) => (
-                            <div key={j} className="exercise-pill">
-                              {ex.exercise_name}
-                              {ex.sets && ex.reps && ` (${ex.sets}x${ex.reps})`}
-                              {ex.weight_kg && ` @ ${kgToLbs(ex.weight_kg)}lbs`}
-                            </div>
-                          ))}
-                          {workout.exercises?.length > 3 && (
-                            <span className="more-exercises">Click to see all {workout.exercises.length} exercises</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="no-data">
-                <p>No workouts logged yet. Start tracking your training!</p>
-              </div>
-            )}
-          </div>
-        )}
-
         {activeTab === 'nutrition' && (
           <div className="nutrition-tab">
-            <h2>Nutrition Analytics</h2>
+            <h2>Nutrition</h2>
             {nutritionChartData.length > 0 ? (
-              <>
-                <div className="chart-container">
-                  <h3>Daily Calories</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={nutritionChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="date" stroke="#b0b0b0" />
-                      <YAxis stroke="#b0b0b0" />
-                      <Tooltip
-                        contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                        labelStyle={{ color: '#fff' }}
-                      />
-                      <Bar dataKey="calories" fill="#00FF6A" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="chart-container">
-                  <h3>Macronutrients Breakdown</h3>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={nutritionChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="date" stroke="#b0b0b0" />
-                      <YAxis stroke="#b0b0b0" />
-                      <Tooltip
-                        contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-                        labelStyle={{ color: '#fff' }}
-                      />
-                      <Legend />
-                      <Line type="monotone" dataKey="protein" stroke="#FF6B9D" strokeWidth={2} name="Protein (g)" />
-                      <Line type="monotone" dataKey="carbs" stroke="#4ECDC4" strokeWidth={2} name="Carbs (g)" />
-                      <Line type="monotone" dataKey="fat" stroke="#FFE66D" strokeWidth={2} name="Fat (g)" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            ) : (
-              <div className="no-data">
-                <p>No nutrition data yet. Start logging your meals!</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'prs' && (
-          <div className="prs-tab">
-            <h2>Personal Records</h2>
-            {personalRecords.length > 0 ? (
-              <div className="prs-grid">
-                {personalRecords.map((pr, i) => (
-                  <div key={i} className="pr-card">
-                    <div className="pr-rank">#{i + 1}</div>
-                    <h4>{pr.name}</h4>
-                    <div className="pr-weight">{pr.weight} lbs</div>
-                    {pr.reps && <div className="pr-reps">{pr.reps} reps</div>}
-                    <div className="pr-date">
-                      {new Date(pr.date).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
+              <div className="chart-container">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={nutritionChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                    <XAxis dataKey="date" stroke="#b0b0b0" />
+                    <YAxis stroke="#b0b0b0" />
+                    <Tooltip
+                      contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }}
+                    />
+                    <Bar dataKey="calories" fill="#00FF6A" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             ) : (
               <div className="no-data">
-                <p>No personal records yet. Keep lifting to set new PRs!</p>
+                <p>No meals logged.</p>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {showWeightModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Log Current Weight</h3>
+            <form onSubmit={handleAddWeight}>
+              <div className="form-group">
+                <label>Weight (lbs)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={newWeight}
+                  onChange={(e) => setNewWeight(e.target.value)}
+                  placeholder="e.g. 165.5"
+                  autoFocus
+                />
+              </div>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowWeightModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-save">
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showProfileModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Edit Goals & Activity</h3>
+            <form onSubmit={handleUpdateProfile}>
+              <div className="form-group">
+                <label>Fitness Goal</label>
+                <select value={editGoal} onChange={(e) => setEditGoal(e.target.value)}>
+                  <option value="lose_weight">Cut (Lose Weight)</option>
+                  <option value="maintain">Maintain Weight</option>
+                  <option value="gain_muscle">Bulk (Gain Muscle)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Activity Level</label>
+                <select value={editActivity} onChange={(e) => setEditActivity(e.target.value)}>
+                  <option value="sedentary">Sedentary (Office job, little exercise)</option>
+                  <option value="lightly_active">Lightly Active (1-3 days/week)</option>
+                  <option value="moderately_active">Moderately Active (3-5 days/week)</option>
+                  <option value="very_active">Very Active (6-7 days/week)</option>
+                  <option value="extra_active">Extra Active (Physical job + training)</option>
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setShowProfileModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-save">
+                  Update Profile
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
