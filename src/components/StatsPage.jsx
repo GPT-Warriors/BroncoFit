@@ -51,9 +51,13 @@ function StatsPage({ onBack }) {
     if (profile) {
       setEditGoal(profile.fitness_goal || 'maintain');
       setEditActivity(profile.activity_level || 'moderate');
+      if (typeof profile.goal_intensity === 'number') {
+        setGoalIntensityIndex(profile.goal_intensity);
+      }
     }
   }, [profile]);
 
+  // Loads profile, measurements, workouts, meals and calculates TDEE
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -79,6 +83,7 @@ function StatsPage({ onBack }) {
     }
   };
 
+  // Calculates TDEE using profile and measurement data
   const runCalculation = async (profileData, measurementsData) => {
     const weightForCalc = measurementsData?.[0]?.weight_kg || profileData.current_weight_kg;
 
@@ -96,6 +101,7 @@ function StatsPage({ onBack }) {
     }
   };
 
+  // Handles saving a new weight entry
   const handleAddWeight = async (e) => {
     e.preventDefault();
     if (!newWeight) return;
@@ -115,13 +121,41 @@ function StatsPage({ onBack }) {
     }
   };
 
+  // Handles updating profile goal and activity level
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+
+    let targetCalories = null;
+    if (tdeeData) {
+      const maintenance = tdeeData.maintenance_calories || 0;
+      let adjustment = 0;
+
+      if (editGoal === 'lose_weight') {
+        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
+        adjustment = -offset;
+      } else if (editGoal === 'gain_muscle') {
+        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
+        adjustment = offset;
+      }
+
+      targetCalories = Math.round(maintenance + adjustment);
+    }
+
+    const payload = {
+      fitness_goal: editGoal,
+      activity_level: editActivity
+    };
+
+    if (editGoal !== 'maintain') {
+      payload.goal_intensity = goalIntensityIndex;
+    }
+
+    if (targetCalories != null) {
+      payload.target_calories = targetCalories;
+    }
+
     try {
-      const updatedProfile = await apiService.updateProfile({
-        fitness_goal: editGoal,
-        activity_level: editActivity
-      });
+      const updatedProfile = await apiService.updateProfile(payload);
 
       setProfile(updatedProfile);
 
@@ -166,24 +200,29 @@ function StatsPage({ onBack }) {
   let goalLabel = 'Target';
 
   if (profile && tdeeData) {
-    const goal = (profile.fitness_goal || 'maintain').toLowerCase();
     const maintenance = tdeeData.maintenance_calories || 0;
-    let adjustment = 0;
 
-    if (goal.includes('lose') || goal.includes('cut')) {
-      const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
-      adjustment = -offset;
-      goalLabel = 'Target (Cut)';
-    } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
-      const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
-      adjustment = offset;
-      goalLabel = 'Target (Bulk)';
+    if (profile.target_calories) {
+      goalCalories = profile.target_calories;
     } else {
-      adjustment = 0;
-      goalLabel = 'Target (Maintain)';
-    }
+      const goal = (profile.fitness_goal || 'maintain').toLowerCase();
+      let adjustment = 0;
 
-    goalCalories = Math.round(maintenance + adjustment);
+      if (goal.includes('lose') || goal.includes('cut')) {
+        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
+        adjustment = -offset;
+        goalLabel = 'Target (Cut)';
+      } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
+        const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
+        adjustment = offset;
+        goalLabel = 'Target (Bulk)';
+      } else {
+        adjustment = 0;
+        goalLabel = 'Target (Maintain)';
+      }
+
+      goalCalories = Math.round(maintenance + adjustment);
+    }
   }
 
   if (!goalCalories && tdeeData?.maintenance_calories && goalLabel === 'Target (Maintain)') {
@@ -336,6 +375,7 @@ function StatsPage({ onBack }) {
         </div>
       </div>
 
+      {/* Tab buttons to switch between sections */}
       <div className="stats-tabs">
         <button
           className={`tab-btn ${activeTab === 'weight' ? 'active' : ''}`}
@@ -357,6 +397,7 @@ function StatsPage({ onBack }) {
         </button>
       </div>
 
+      {/* Shows content for the selected tab */}
       {activeTab === 'weight' && (
         <div className="tab-content">
           <h2>Weight Progress</h2>
@@ -380,6 +421,7 @@ function StatsPage({ onBack }) {
         </div>
       )}
 
+      {/* Workouts tab content */}
       {activeTab === 'workouts' && (
         <div className="tab-content">
           <h2>Recent Workouts</h2>
@@ -403,6 +445,7 @@ function StatsPage({ onBack }) {
         </div>
       )}
 
+      {/* Nutrition tab content */}
       {activeTab === 'nutrition' && (
         <div className="tab-content">
           <h2>Daily Calories</h2>

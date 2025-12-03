@@ -1,3 +1,4 @@
+# app/models.py
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
@@ -64,6 +65,8 @@ class ProfileBase(BaseModel):
     target_weight_kg: Optional[float] = Field(None, gt=0, le=500)
     activity_level: Optional[ActivityLevel] = None
     fitness_goal: Optional[FitnessGoal] = None
+    goal_intensity: Optional[int] = Field(None, ge=0, le=3)
+    target_calories: Optional[int] = None
 
 
 class ProfileCreate(ProfileBase):
@@ -231,4 +234,3 @@ class WorkoutPlanOut(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-

@@ -1,10 +1,13 @@
-// StatsPage.test.jsx
+/**
+ * Tests how the StatsPage component behaves
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import StatsPage from '../StatsPage';
 import apiService from '../../services/api';
 
+// Mocks the API service that StatsPage uses
 vi.mock('../../services/api', () => ({
   default: {
     getProfile: vi.fn(),
@@ -13,8 +16,8 @@ vi.mock('../../services/api', () => ({
     getMeals: vi.fn(),
     calculateTDEE: vi.fn(),
     addMeasurement: vi.fn(),
-    updateProfile: vi.fn()
-  }
+    updateProfile: vi.fn(),
+  },
 }));
 
 describe('StatsPage', () => {
@@ -30,14 +33,14 @@ describe('StatsPage', () => {
     target_weight_kg: 75.0,
     activity_level: 'moderate',
     fitness_goal: 'lose_weight',
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   const mockTDEE = {
     bmr: 1850,
     maintenance_calories: 2400,
     weight_loss_calories: 1900,
-    weight_gain_calories: 2900
+    weight_gain_calories: 2900,
   };
 
   const mockMeasurements = [
@@ -46,8 +49,8 @@ describe('StatsPage', () => {
       id: '2',
       user_id: '123',
       weight_kg: 81.5,
-      measurement_date: new Date(Date.now() - 7 * 86400000).toISOString()
-    }
+      measurement_date: new Date(Date.now() - 7 * 86400000).toISOString(),
+    },
   ];
 
   const mockWorkouts = [
@@ -55,8 +58,8 @@ describe('StatsPage', () => {
       id: 'w1',
       user_id: '123',
       workout_name: 'Upper Body',
-      workout_date: new Date().toISOString()
-    }
+      workout_date: new Date().toISOString(),
+    },
   ];
 
   const mockMeals = [
@@ -65,8 +68,8 @@ describe('StatsPage', () => {
       user_id: '123',
       meal_type: 'breakfast',
       meal_date: new Date().toISOString(),
-      total_calories: 500
-    }
+      total_calories: 500,
+    },
   ];
 
   beforeEach(() => {
@@ -139,7 +142,9 @@ describe('StatsPage', () => {
     it('should update goals from inline goals form', async () => {
       apiService.updateProfile.mockResolvedValue({
         ...mockProfile,
-        fitness_goal: 'gain_muscle'
+        fitness_goal: 'gain_muscle',
+        goal_intensity: 1,
+        target_calories: 2900,
       });
 
       render(<StatsPage user={mockUser} onBack={vi.fn()} />);
@@ -155,8 +160,10 @@ describe('StatsPage', () => {
         expect(apiService.updateProfile).toHaveBeenCalledWith(
           expect.objectContaining({
             fitness_goal: 'gain_muscle',
-            activity_level: 'moderate'
-          })
+            activity_level: 'moderate',
+            goal_intensity: 1,
+            target_calories: 2900,
+          }),
         );
       });
     });
