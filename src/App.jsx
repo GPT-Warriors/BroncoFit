@@ -11,10 +11,12 @@ import NutritionLogger from './components/NutritionLogger'
 import ExerciseLibrary from './components/ExerciseLibrary'
 import apiService from './services/api'
 
+
 function App() {
   const [currentPage, setCurrentPage] = useState('home') // home, signup, login, profile, dashboard, workout-log, nutrition-log, coach, settings
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -36,19 +38,23 @@ function App() {
     setCurrentPage(page)
   }
 
+
   const handleLoginSuccess = (userData) => {
     setUser(userData)
     setCurrentPage('dashboard')
   }
+
 
   const handleSignupSuccess = (userData) => {
     setUser(userData)
     setCurrentPage('dashboard')
   }
 
+
   const handleLogSuccess = () => {
     setCurrentPage('dashboard')
   }
+
 
   const handleLogout = () => {
     apiService.logout()
@@ -56,9 +62,11 @@ function App() {
     setCurrentPage('home')
   }
 
+
   const handleBackToHome = () => {
     setCurrentPage('home')
   }
+
 
   // Show loading state
   if (loading) {
@@ -69,38 +77,47 @@ function App() {
     )
   }
 
+
   // Render different pages based on currentPage state
   if (currentPage === 'signup') {
     return <SignupPage onSuccess={handleSignupSuccess} onBack={handleBackToHome} onNavigateToLogin={() => setCurrentPage('login')} />
   }
 
+
   if (currentPage === 'login') {
     return <LoginPage onSuccess={handleLoginSuccess} onBack={handleBackToHome} onNavigateToSignup={() => setCurrentPage('signup')} />
   }
+
 
   if (currentPage === 'dashboard') {
     return <DashboardPage user={user} onBack={handleBackToHome} onNavigate={handleNavigation} />
   }
 
+
   if (currentPage === 'profile') {
     return <StatsPage user={user} onBack={handleBackToHome} />
   }
+
 
   if (currentPage === 'coach') {
     return <AICoachPage user={user} onBack={handleBackToHome} />
   }
 
+
   if (currentPage === 'workout-log') {
     return <WorkoutLogger user={user} onBack={() => setCurrentPage('dashboard')} onSuccess={handleLogSuccess} />
   }
+
 
   if (currentPage === 'nutrition-log') {
     return <NutritionLogger user={user} onBack={() => setCurrentPage('dashboard')} onSuccess={handleLogSuccess} />
   }
 
+
   if (currentPage === 'exercises') {
     return <ExerciseLibrary user={user} onBack={() => setCurrentPage('dashboard')} />
   }
+
 
   // Home page (default)
   return (
@@ -111,6 +128,7 @@ function App() {
         onLogout={handleLogout}
         currentPage={currentPage}
       />
+
 
       <header className="app-header">
         <h1>Transform Your Fitness.<br />Unlock Your Potential.</h1>
@@ -134,6 +152,7 @@ function App() {
           </div>
         )}
       </header>
+
 
       <main className="main-content">
         <section className="welcome-section">
@@ -161,11 +180,13 @@ function App() {
         </section>
       </main>
 
+
       <footer className="app-footer">
         <p>&copy; 2025 BroncoFit. All rights reserved.</p>
       </footer>
     </div>
   )
 }
+
 
 export default App

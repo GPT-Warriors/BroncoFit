@@ -130,7 +130,6 @@ describe('ExerciseLibrary', () => {
       fireEvent.click(clearButton);
 
       expect(searchInput.value).toBe('');
-      // Should show all exercises again
       expect(screen.getByText('Bench Press')).toBeInTheDocument();
       expect(screen.getByText('Deadlift')).toBeInTheDocument();
     });
@@ -148,7 +147,6 @@ describe('ExerciseLibrary', () => {
 
       expect(screen.getByText('Running')).toBeInTheDocument();
       expect(screen.getByText('Cycling')).toBeInTheDocument();
-      // Strength exercises should not appear
       expect(screen.queryByText('Bench Press')).not.toBeInTheDocument();
     });
 
@@ -163,7 +161,6 @@ describe('ExerciseLibrary', () => {
 
       expect(screen.getByText('Push-ups')).toBeInTheDocument();
       expect(screen.getByText('Pull-ups')).toBeInTheDocument();
-      // Barbell exercises should not appear
       expect(screen.queryByText('Bench Press')).not.toBeInTheDocument();
     });
 
@@ -178,7 +175,6 @@ describe('ExerciseLibrary', () => {
 
       expect(screen.getByText('Push-ups')).toBeInTheDocument();
       expect(screen.getByText('Running')).toBeInTheDocument();
-      // Advanced exercises should not appear
       expect(screen.queryByText('Clean and Jerk')).not.toBeInTheDocument();
     });
 
