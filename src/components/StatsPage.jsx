@@ -4,19 +4,16 @@ import apiService from '../services/api';
 import './StatsPage.css';
 
 function StatsPage({ onBack }) {
-  // Stores user data from the API
   const [profile, setProfile] = useState(null);
   const [measurements, setMeasurements] = useState([]);
   const [workouts, setWorkouts] = useState([]);
   const [meals, setMeals] = useState([]);
   const [tdeeData, setTdeeData] = useState(null);
   
-  // Tracks loading state and tab selection
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('weight');
   const [expandedWorkouts, setExpandedWorkouts] = useState({});
   
-  // Controls modal visibility and form fields
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [newWeight, setNewWeight] = useState('');
   
@@ -24,7 +21,6 @@ function StatsPage({ onBack }) {
   const [editGoal, setEditGoal] = useState('maintain');
   const [editActivity, setEditActivity] = useState('moderately_active');
 
-  // Helper functions for unit conversions
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
   const lbsToKg = (lbs) => (lbs / 2.20462);
   
@@ -39,7 +35,6 @@ function StatsPage({ onBack }) {
     loadAllData();
   }, []);
 
-  // Syncs edit fields with current profile data
   useEffect(() => {
     if (profile) {
       setEditGoal(profile.fitness_goal || 'maintain');
@@ -47,34 +42,24 @@ function StatsPage({ onBack }) {
     }
   }, [profile, showProfileModal]);
 
-  // Loads all stats data from the API
+  // Loads profile, measurements, workouts, meals and calculates TDEE
   const loadAllData = async () => {
     try {
       setLoading(true);
-
-      const [profileData, measurementData, workoutData, mealData] = await Promise.all([
+      const [profileRes, measurementRes, workoutRes, mealRes] = await Promise.all([
         apiService.getProfile(),
         apiService.getMeasurements(30),
         apiService.getWorkouts(20),
         apiService.getMeals(30)
       ]);
 
-      setProfile(profileData);
-      setMeasurements(measurementData || []);
-      setWorkouts(workoutData || []);
-      setMeals(mealData || []);
+      setProfile(profileRes);
+      setMeasurements(measurementRes || []);
+      setWorkouts(workoutRes || []);
+      setMeals(mealRes || []);
 
-      if (profileData) {
-        const weightForCalc = measurementData?.[0]?.weight_kg || profileData.current_weight_kg;
-
-        const tdee = await apiService.calculateTDEE({
-          age: profileData.age,
-          sex: profileData.sex,
-          height_cm: profileData.height_cm,
-          weight_kg: weightForCalc,
-          activity_level: profileData.activity_level,
-        });
-        setTdeeData(tdee);
+      if (profileRes) {
+        await runCalculation(profileRes, measurementRes);
       }
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -83,7 +68,25 @@ function StatsPage({ onBack }) {
     }
   };
 
-  // Handles adding a new weight entry
+  // Calculates TDEE using profile and measurement data
+  const runCalculation = async (profileData, measurementsData) => {
+    const weightForCalc = measurementsData?.[0]?.weight_kg || profileData.current_weight_kg;
+    
+    try {
+      const tdee = await apiService.calculateTDEE({
+        age: profileData.age,
+        sex: profileData.sex,
+        height_cm: profileData.height_cm,
+        weight_kg: weightForCalc,
+        activity_level: profileData.activity_level, 
+      });
+      setTdeeData(tdee);
+    } catch (error) {
+      console.warn("TDEE Calc failed:", error);
+    }
+  };
+
+  // Handles saving a new weight entry
   const handleAddWeight = async (e) => {
     e.preventDefault();
     if (!newWeight) return;
@@ -98,10 +101,9 @@ function StatsPage({ onBack }) {
       
       setNewWeight('');
       setShowWeightModal(false);
-      await loadAllData();
+      await loadAllData(); 
     } catch (error) {
-      console.error("Failed to add weight", error);
-      alert("Failed to save weight. Please try again.");
+      alert("Failed to save weight.");
     }
   };
 
@@ -109,61 +111,45 @@ function StatsPage({ onBack }) {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
-      await apiService.updateProfile({
+      const updatedProfile = await apiService.updateProfile({
         fitness_goal: editGoal,
         activity_level: editActivity
       });
       
+      setProfile(updatedProfile);
+      
+      const profileForCalc = { ...updatedProfile, activity_level: editActivity };
+      await runCalculation(profileForCalc, measurements);
+
       setShowProfileModal(false);
-      await loadAllData();
     } catch (error) {
-      console.error("Failed to update profile", error);
-      alert("Failed to update profile. Please try again.");
+      console.error("Update failed", error);
+      alert("Failed to update profile. Check activity level inputs.");
     }
   };
 
-  // Prepares weight chart data
-  const weightChartData = measurements
-    .slice()
-    .reverse()
-    .map(m => ({
-      date: new Date(m.measurement_date || m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      weight: parseFloat(kgToLbs(m.weight_kg)),
-      target: parseFloat(kgToLbs(profile?.target_weight_kg || 0))
-    }));
+  const weightChartData = measurements.slice().reverse().map(m => ({
+    date: new Date(m.measurement_date || m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    weight: parseFloat(kgToLbs(m.weight_kg)),
+    target: parseFloat(kgToLbs(profile?.target_weight_kg || 0))
+  }));
 
-  // Prepares nutrition chart data
-  const nutritionChartData = meals
-    .reduce((acc, meal) => {
+  const nutritionChartData = meals.reduce((acc, meal) => {
       const date = new Date(meal.meal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const existing = acc.find(d => d.date === date);
-
       if (existing) {
         existing.calories += meal.total_calories;
-        existing.protein += meal.total_protein_g;
-        existing.carbs += meal.total_carbs_g;
-        existing.fat += meal.total_fat_g;
       } else {
-        acc.push({
-          date,
-          calories: meal.total_calories,
-          protein: meal.total_protein_g,
-          carbs: meal.total_carbs_g,
-          fat: meal.total_fat_g
-        });
+        acc.push({ date, calories: meal.total_calories });
       }
       return acc;
-    }, [])
-    .slice(0, 7)
-    .reverse();
+    }, []).slice(0, 7).reverse();
 
-  // Chooses target calories based on goal and TDEE
   let goalCalories = 0;
   let goalLabel = "Target";
 
   if (profile && tdeeData) {
     const goal = (profile.fitness_goal || 'maintain').toLowerCase();
-
     if (goal.includes('lose') || goal.includes('cut')) {
       goalCalories = tdeeData.weight_loss_calories;
       goalLabel = "Target (Cut)";
@@ -175,45 +161,26 @@ function StatsPage({ onBack }) {
       goalLabel = "Target (Maintain)";
     }
   }
-
-  // Uses maintenance calories if other values are missing
+  
+  // Uses maintenance calories if no other target is set
   if (!goalCalories && tdeeData?.maintenance_calories) {
       goalCalories = tdeeData.maintenance_calories;
   }
 
-  // Renders loading screen when data is loading
-  if (loading) {
-    return (
-      <div className="stats-page">
-        <div className="stats-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading your stats...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="stats-page"><p>Loading...</p></div>;
 
-  // Renders the main stats page
   return (
     <div className="stats-page">
-      <button className="back-button" onClick={onBack}>
-        ← Back
-      </button>
+      <button className="back-button" onClick={onBack}>← Back</button>
 
-      {/* Page header section */}
       <div className="stats-header">
         <h1>📊 Your Stats</h1>
         <p>Track your progress and achievements</p>
       </div>
 
-      {/* Profile summary section */}
       <div className="profile-summary-card">
         <div className="summary-actions">
-           <button 
-             className="icon-btn" 
-             onClick={() => setShowProfileModal(true)} 
-             title="Edit Goals & Activity"
-           >
+           <button className="icon-btn" onClick={() => setShowProfileModal(true)} title="Edit Goals & Activity">
             ✏️ Edit Profile
           </button>
         </div>
@@ -238,7 +205,7 @@ function StatsPage({ onBack }) {
               </span>
             </div>
 
-            <div className="summary-item highlight">
+            <div className="summary-item">
               <span className="summary-label">{goalLabel}</span>
               <span className="summary-value accent">
                   {goalCalories ? Math.round(goalCalories) : '---'} cal
@@ -247,93 +214,62 @@ function StatsPage({ onBack }) {
         </div>
       </div>
 
-      {/* Tabs for switching between sections */}
+      {/* Tab buttons to switch between sections */}
       <div className="stats-tabs">
         <button className={`tab-btn ${activeTab === 'weight' ? 'active' : ''}`} onClick={() => setActiveTab('weight')}>⚖️ Weight</button>
         <button className={`tab-btn ${activeTab === 'workouts' ? 'active' : ''}`} onClick={() => setActiveTab('workouts')}>💪 Workouts</button>
         <button className={`tab-btn ${activeTab === 'nutrition' ? 'active' : ''}`} onClick={() => setActiveTab('nutrition')}>🍽️ Nutrition</button>
       </div>
 
-      {/* Tab content area */}
-      <div className="tab-content">
-        {activeTab === 'weight' && (
-          <div className="weight-tab">
+      {/* Shows content for the selected tab */}
+      {activeTab === 'weight' && (
+        <div className="chart-container">
             <div className="section-header-row">
                 <h2>Weight Progress</h2>
                 <button className="action-btn-small" onClick={() => setShowWeightModal(true)}>+ Log Weight</button>
             </div>
-            {weightChartData.length > 0 ? (
-              <div className="chart-container">
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={weightChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="date" stroke="#b0b0b0" />
-                    <YAxis stroke="#b0b0b0" domain={['auto', 'auto']} />
-                    <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }} labelStyle={{ color: '#fff' }} />
-                    <Legend />
-                    <Line type="monotone" dataKey="weight" stroke="#00FF6A" strokeWidth={3} dot={{ fill: '#00FF6A' }} name="Weight (lbs)" />
-                    <Line type="monotone" dataKey="target" stroke="#EEC97D" strokeDasharray="5 5" name="Target (lbs)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            ) : <div className="no-data"><p>No data. Log your weight to see the graph!</p></div>}
-            
-            <div className="measurements-list">
-              <h3>Recent Measurements</h3>
-              {measurements.slice(0, 5).map((m, i) => (
-                <div key={i} className="measurement-item">
-                  <span className="measurement-date">
-                    {new Date(m.measurement_date || m.created_at).toLocaleDateString()}
-                  </span>
-                  <span className="measurement-weight">{kgToLbs(m.weight_kg)} lbs</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+             <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={weightChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="date" stroke="#888" />
+                <YAxis stroke="#888" domain={['auto', 'auto']} />
+                <Tooltip contentStyle={{ background: '#111', border: '1px solid #333' }} />
+                <Line type="monotone" dataKey="weight" stroke="#00FF6A" strokeWidth={3} dot={{r:4, fill:'#00FF6A'}} />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+      )}
 
-        {/* Workouts tab content */}
-        {activeTab === 'workouts' && (
-             <div className="workouts-tab">
-                <h2>Recent Workouts</h2>
-                {workouts.length === 0 && <div className="no-data"><p>No workouts found.</p></div>}
-                <div className="workout-timeline">
-                    {workouts.map((w, i) => (
-                        <div key={i} className="workout-item">
-                            <div className="workout-header">
-                                <h4>{w.workout_name}</h4>
-                                <span className="workout-date">{new Date(w.workout_date).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+      {/* Workouts tab content */}
+      {activeTab === 'workouts' && (
+        <div className="chart-container">
+           <h2>Recent Workouts</h2>
+           {workouts.map((w, i) => (
+             <div key={i} style={{padding: '10px', borderBottom: '1px solid #222'}}>
+               <h4>{w.workout_name}</h4>
+               <small style={{color:'#666'}}>{new Date(w.workout_date).toLocaleDateString()}</small>
              </div>
-        )}
-        
-        {/* Nutrition tab content */}
-        {activeTab === 'nutrition' && (
-             <div className="nutrition-tab">
-                <h2>Nutrition</h2>
-                {nutritionChartData.length > 0 ? (
-                    <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={nutritionChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                        <XAxis dataKey="date" stroke="#b0b0b0" />
-                        <YAxis stroke="#b0b0b0" />
-                        <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333' }} />
-                        <Bar dataKey="calories" fill="#00FF6A" radius={[4,4,0,0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                    </div>
-                ) : <div className="no-data"><p>No meals logged.</p></div>}
-             </div>
-        )}
-      </div>
-
-      {/* Modals for weight logging and profile editing */}
+           ))}
+        </div>
+      )}
       
-      {/* Weight modal */}
+      {/* Nutrition tab content */}
+      {activeTab === 'nutrition' && (
+        <div className="chart-container">
+            <h2>Daily Calories</h2>
+            <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={nutritionChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="date" stroke="#888" />
+                    <YAxis stroke="#888" />
+                    <Tooltip contentStyle={{ background: '#111', border: '1px solid #333' }} />
+                    <Bar dataKey="calories" fill="#00FF6A" />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Modals for logging weight and editing profile */}
       {showWeightModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -343,12 +279,9 @@ function StatsPage({ onBack }) {
                 <label htmlFor="weight-input">Weight (lbs)</label>
                 <input 
                   id="weight-input"
-                  type="number" 
-                  step="0.1" 
-                  value={newWeight} 
-                  onChange={(e) => setNewWeight(e.target.value)} 
-                  placeholder="e.g. 165.5"
-                  autoFocus
+                  type="number" step="0.1" 
+                  value={newWeight} onChange={(e) => setNewWeight(e.target.value)} 
+                  placeholder="e.g. 165.5" autoFocus
                 />
               </div>
               <div className="modal-actions">
@@ -360,7 +293,6 @@ function StatsPage({ onBack }) {
         </div>
       )}
 
-      {/* Profile modal */}
       {showProfileModal && (
         <div className="modal-overlay">
           <div className="modal-content">
