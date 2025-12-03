@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import apiService from '../services/api';
+import * as apiService from '../services/api';   
 import WorkoutCalendar from './WorkoutCalendar';
 import './DashboardPage.css';
-
 
 function DashboardPage({ user, onBack, onNavigate }) {
   const [loading, setLoading] = useState(true);
@@ -13,11 +12,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [tdeeData, setTdeeData] = useState(null);
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
 
-
   useEffect(() => {
     loadDashboardData();
   }, []);
-
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -29,7 +26,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
         apiService.getWorkouts(),
       ]);
 
-
       if (profileRes.status === 'fulfilled') {
         setProfile(profileRes.value);
         if (profileRes.value) {
@@ -38,14 +34,11 @@ function DashboardPage({ user, onBack, onNavigate }) {
         }
       }
 
-
       if (nutritionRes.status === 'fulfilled') setTodaysNutrition(nutritionRes.value);
       if (measurementRes.status === 'fulfilled') setRecentMeasurement(measurementRes.value);
 
-
       if (workoutsRes.status === 'fulfilled' && Array.isArray(workoutsRes.value)) {
         const rawWorkouts = workoutsRes.value;
-
 
         if (rawWorkouts.length > 0) {
           const sorted = [...rawWorkouts].sort(
@@ -54,12 +47,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
           setLatestWorkout(sorted[0]);
         }
 
-
         const formattedForCalendar = rawWorkouts.map((w) => {
           const dateObj = new Date(w.workout_date);
           const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-
-
           return {
             id: w.id || w._id || Math.random(),
             title: w.workout_name,
@@ -84,9 +74,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
     }
   };
 
-
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
-
 
   if (loading) {
     return (
@@ -99,11 +87,9 @@ function DashboardPage({ user, onBack, onNavigate }) {
     );
   }
 
-
   return (
     <div className="dashboard-page">
       <button className="back-button" onClick={onBack}>← Back</button>
-
 
       {/* Header */}
       <div className="dashboard-header">
@@ -127,7 +113,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
         </div>
       </div>
 
-
       {/* Stats Grid */}
       <div className="stats-grid-modern">
         {/* Current Weight Card */}
@@ -148,7 +133,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
             Target: {profile ? kgToLbs(profile.target_weight_kg) : '---'} lbs
           </div>
         </div>
-
 
         {/* Calories Card */}
         <div className="stat-card calories-card">
@@ -181,7 +165,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-
         {/* Macros Card */}
         <div className="stat-card macros-card">
           <div className="stat-card-header">
@@ -210,7 +193,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-
         {/* Workout Card */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
@@ -238,7 +220,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
         </div>
       </div>
 
-
       {/* Workout Calendar Section */}
       <div className="calendar-section" style={{ marginTop: '32px', marginBottom: '32px' }}>
         <div className="section-header" style={{ marginBottom: '16px' }}>
@@ -246,7 +227,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
         </div>
         <WorkoutCalendar workouts={calendarWorkouts} />
       </div>
-
 
       {/* Activity Section */}
       <div className="activity-section">
@@ -259,7 +239,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
             <div className="activity-item">
               <span className="activity-icon">🍽️</span>
               <div className="activity-content">
-                <p className="activity-title">Logged {todaysNutrition.meals_logged} meal(s) today</p>
+                <p className="activity-title">Logged {todaysNutrition.meals_logged} meals today</p>
                 <p className="activity-time">Today</p>
               </div>
             </div>
@@ -292,7 +272,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           )}
           {!todaysNutrition?.meals_logged && !latestWorkout && !recentMeasurement && (
             <div className="no-activity">
-              <p>No recent activity. Start by logging a workout or meal!</p>
+              <p>Nothing yet. Start by logging a workout or meal!</p> 
             </div>
           )}
         </div>
@@ -300,6 +280,5 @@ function DashboardPage({ user, onBack, onNavigate }) {
     </div>
   );
 }
-
 
 export default DashboardPage;
