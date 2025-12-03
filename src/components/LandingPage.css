@@ -1,0 +1,50 @@
+/* LandingPage - Inherits most styles from App.css */
+
+.landing-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Additional responsive fixes */
+@media (max-width: 768px) {
+  .app-header {
+    padding: 8rem 1.5rem 3rem;
+    min-height: auto;
+  }
+
+  .app-header h1 {
+    font-size: 3rem;
+  }
+
+  .tagline {
+    font-size: 1.1rem;
+  }
+
+  .main-content {
+    padding: 2rem 1rem;
+  }
+
+  .welcome-section {
+    padding: 2.5rem 2rem;
+  }
+
+  .welcome-section h2 {
+    font-size: 2rem;
+  }
+
+  .welcome-section p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: 2.5rem;
+  }
+
+  .welcome-section {
+    padding: 2rem 1.5rem;
+  }
+}
