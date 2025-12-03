@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import apiService from '../services/api';
 import './StatsPage.css';
 
@@ -33,6 +44,7 @@ function StatsPage({ onBack }) {
 
   useEffect(() => {
     loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAllData = async () => {
@@ -219,7 +231,7 @@ function StatsPage({ onBack }) {
           </div>
 
           <div className="summary-item">
-            <span className="summary-label">Maintenance</span>
+            <span className="summary-label">Maintenance (TDEE)</span>
             <span className="summary-value">
               {tdeeData ? Math.round(tdeeData.maintenance_calories) : '---'} cal
             </span>
@@ -264,7 +276,6 @@ function StatsPage({ onBack }) {
                 + Log Weight
               </button>
             </div>
-
             {weightChartData.length > 0 ? (
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height={350}>
@@ -358,8 +369,9 @@ function StatsPage({ onBack }) {
             <h3>Log Current Weight</h3>
             <form onSubmit={handleAddWeight}>
               <div className="form-group">
-                <label>Weight (lbs)</label>
+                <label htmlFor="weight-input">Weight (lbs)</label>
                 <input
+                  id="weight-input"
                   type="number"
                   step="0.1"
                   value={newWeight}
@@ -391,8 +403,12 @@ function StatsPage({ onBack }) {
             <h3>Edit Goals & Activity</h3>
             <form onSubmit={handleUpdateProfile}>
               <div className="form-group">
-                <label>Fitness Goal</label>
-                <select value={editGoal} onChange={(e) => setEditGoal(e.target.value)}>
+                <label htmlFor="fitness-goal">Fitness Goal</label>
+                <select
+                  id="fitness-goal"
+                  value={editGoal}
+                  onChange={(e) => setEditGoal(e.target.value)}
+                >
                   <option value="lose_weight">Cut (Lose Weight)</option>
                   <option value="maintain">Maintain Weight</option>
                   <option value="gain_muscle">Bulk (Gain Muscle)</option>
@@ -400,8 +416,12 @@ function StatsPage({ onBack }) {
               </div>
 
               <div className="form-group">
-                <label>Activity Level</label>
-                <select value={editActivity} onChange={(e) => setEditActivity(e.target.value)}>
+                <label htmlFor="activity-level">Activity Level</label>
+                <select
+                  id="activity-level"
+                  value={editActivity}
+                  onChange={(e) => setEditActivity(e.target.value)}
+                >
                   <option value="sedentary">Sedentary (Office job, little exercise)</option>
                   <option value="lightly_active">Lightly Active (1-3 days/week)</option>
                   <option value="moderately_active">Moderately Active (3-5 days/week)</option>
