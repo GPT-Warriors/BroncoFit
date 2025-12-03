@@ -14,6 +14,8 @@ import {
 import apiService from '../services/api';
 import './StatsPage.css';
 
+const GOAL_OFFSETS = [250, 500, 750, 1000];
+
 function StatsPage({ onBack }) {
   const [profile, setProfile] = useState(null);
   const [measurements, setMeasurements] = useState([]);
@@ -29,6 +31,7 @@ function StatsPage({ onBack }) {
 
   const [editGoal, setEditGoal] = useState('maintain');
   const [editActivity, setEditActivity] = useState('moderate');
+  const [goalIntensityIndex, setGoalIntensityIndex] = useState(1);
 
   const kgToLbs = (kg) => (kg * 2.20462).toFixed(1);
   const lbsToKg = (lbs) => lbs / 2.20462;
@@ -51,7 +54,6 @@ function StatsPage({ onBack }) {
     }
   }, [profile]);
 
-  // Loads profile, measurements, workouts, meals and calculates TDEE
   const loadAllData = async () => {
     try {
       setLoading(true);
@@ -77,7 +79,6 @@ function StatsPage({ onBack }) {
     }
   };
 
-  // Calculates TDEE using profile and measurement data
   const runCalculation = async (profileData, measurementsData) => {
     const weightForCalc = measurementsData?.[0]?.weight_kg || profileData.current_weight_kg;
 
@@ -95,7 +96,6 @@ function StatsPage({ onBack }) {
     }
   };
 
-  // Handles saving a new weight entry
   const handleAddWeight = async (e) => {
     e.preventDefault();
     if (!newWeight) return;
@@ -115,7 +115,6 @@ function StatsPage({ onBack }) {
     }
   };
 
-  // Handles updating profile goal and activity level
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
@@ -165,24 +164,41 @@ function StatsPage({ onBack }) {
 
   let goalCalories = 0;
   let goalLabel = 'Target';
+  let goalIntensityLabel = 'Select rate based on your goal';
 
   if (profile && tdeeData) {
     const goal = (profile.fitness_goal || 'maintain').toLowerCase();
+    const maintenance = tdeeData.maintenance_calories || 0;
+    const offset = GOAL_OFFSETS[goalIntensityIndex] || 0;
+    let adjustment = 0;
+
     if (goal.includes('lose') || goal.includes('cut')) {
-      goalCalories = tdeeData.weight_loss_calories;
+      adjustment = -offset;
       goalLabel = 'Target (Cut)';
     } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
-      goalCalories = tdeeData.weight_gain_calories;
+      adjustment = offset;
       goalLabel = 'Target (Bulk)';
     } else {
-      goalCalories = tdeeData.maintenance_calories;
+      adjustment = 0;
       goalLabel = 'Target (Maintain)';
+    }
+
+    goalCalories = Math.round(maintenance + adjustment);
+
+    if (adjustment === 0) {
+      goalIntensityLabel = 'Maintain (0 lb/week)';
+    } else {
+      const rateLbsPerWeek = offset / 500;
+      if (adjustment < 0) {
+        goalIntensityLabel = `Cut (${rateLbsPerWeek} lb/week)`;
+      } else {
+        goalIntensityLabel = `Bulk (${rateLbsPerWeek} lb/week)`;
+      }
     }
   }
 
-  // Uses maintenance calories if no other target is set
-  if (!goalCalories && tdeeData?.maintenance_calories) {
-    goalCalories = tdeeData.maintenance_calories;
+  if (!goalCalories && tdeeData?.maintenance_calories && goalLabel === 'Target (Maintain)') {
+    goalCalories = Math.round(tdeeData.maintenance_calories);
   }
 
   if (loading) {
@@ -263,6 +279,21 @@ function StatsPage({ onBack }) {
               </div>
             </div>
 
+            <div className="quick-form-group goal-intensity-group">
+              <label htmlFor="goal-intensity-range">Goal Intensity</label>
+              <input
+                id="goal-intensity-range"
+                className="goal-intensity-slider"
+                type="range"
+                min="0"
+                max="3"
+                step="1"
+                value={goalIntensityIndex}
+                onChange={(e) => setGoalIntensityIndex(parseInt(e.target.value, 10))}
+              />
+              <div className="goal-intensity-label">{goalIntensityLabel}</div>
+            </div>
+
             <div className="quick-form-actions">
               <button type="submit" className="btn-secondary">
                 Update Goals
@@ -285,8 +316,8 @@ function StatsPage({ onBack }) {
               {measurements[0]
                 ? kgToLbs(measurements[0].weight_kg)
                 : profile
-                  ? kgToLbs(profile.current_weight_kg)
-                  : '---'}{' '}
+                ? kgToLbs(profile.current_weight_kg)
+                : '---'}{' '}
               lbs
             </span>
           </div>
@@ -307,7 +338,6 @@ function StatsPage({ onBack }) {
         </div>
       </div>
 
-      {/* Tab buttons to switch between sections */}
       <div className="stats-tabs">
         <button
           className={`tab-btn ${activeTab === 'weight' ? 'active' : ''}`}
@@ -329,7 +359,6 @@ function StatsPage({ onBack }) {
         </button>
       </div>
 
-      {/* Shows content for the selected tab */}
       {activeTab === 'weight' && (
         <div className="tab-content">
           <h2>Weight Progress</h2>
@@ -349,12 +378,10 @@ function StatsPage({ onBack }) {
                 />
               </LineChart>
             </ResponsiveContainer>
-
           </div>
         </div>
       )}
 
-      {/* Workouts tab content */}
       {activeTab === 'workouts' && (
         <div className="tab-content">
           <h2>Recent Workouts</h2>
@@ -378,7 +405,6 @@ function StatsPage({ onBack }) {
         </div>
       )}
 
-      {/* Nutrition tab content */}
       {activeTab === 'nutrition' && (
         <div className="tab-content">
           <h2>Daily Calories</h2>
