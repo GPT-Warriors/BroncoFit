@@ -29,6 +29,7 @@ function App() {
         try {
           const userData = await apiService.getCurrentUser()
           setUser(userData)
+
           // ✅ NEW: Load profile and TDEE data
           if (userData) {
             try {
@@ -52,11 +53,8 @@ function App() {
         } catch (err) {
           console.error('Auth check failed:', err)
           apiService.logout()
-        } catch (err) {
-          console.error('Auth check failed:', err)
-          apiService.logout()
         }
-      }
+    }
       setLoading(false)
     }
     checkAuth()
