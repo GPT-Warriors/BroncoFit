@@ -1,5 +1,8 @@
-import React, { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import apiService from '../services/api';
 import './MacroRecommendations.css';
+
+const GOAL_OFFSETS = [250, 500, 750, 1000];
 
 // Macro calculation based on goals
 const calculateMacros = (calories, goal, weight_kg) => {
@@ -83,25 +86,86 @@ const calculateMacros = (calories, goal, weight_kg) => {
   };
 };
 
-const MacroRecommendations = ({
-  targetCalories,
-  currentCalories = 0,
-  currentProtein = 0,
-  currentCarbs = 0,
-  currentFat = 0,
-  fitnessGoal = 'maintain',
-  weight_kg = 70
-}) => {
+function MacroRecommendationsPage({ onBack, profile, tdeeData }) {
+  const [todaysNutrition, setTodaysNutrition] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    loadTodaysNutrition();
+  }, []);
+
+  const loadTodaysNutrition = async () => {
+    try {
+      const nutrition = await apiService.getTodaysNutritionSummary();
+      setTodaysNutrition(nutrition);
+    } catch (error) {
+      console.error('Error loading nutrition:', error);
+      setTodaysNutrition(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate target calories based on goal
+  const targetCalories = useMemo(() => {
+    if (!profile || !tdeeData) return null;
+
+    const goal = (profile.fitness_goal || 'maintain').toLowerCase();
+    const maintenance = tdeeData.maintenance_calories;
+    const intensityIndex = typeof profile.goal_intensity === 'number' ? profile.goal_intensity : 1;
+    const offset = GOAL_OFFSETS[intensityIndex] || 0;
+
+    if (goal.includes('lose') || goal.includes('cut')) {
+      return profile.target_calories || (maintenance ? Math.round(maintenance - offset) : tdeeData.weight_loss_calories);
+    } else if (goal.includes('gain') || goal.includes('bulk') || goal.includes('muscle')) {
+      return profile.target_calories || (maintenance ? Math.round(maintenance + offset) : tdeeData.weight_gain_calories);
+    } else {
+      return profile.target_calories || maintenance || tdeeData.maintenance_calories;
+    }
+  }, [profile, tdeeData]);
+
+  // Get current weight
+  const currentWeight = useMemo(() => {
+    return profile?.current_weight_kg || 70;
+  }, [profile]);
+
+  // Calculate recommended macros
   const recommended = useMemo(() => {
-    return calculateMacros(targetCalories, fitnessGoal, weight_kg);
-  }, [targetCalories, fitnessGoal, weight_kg]);
+    if (!targetCalories || !profile) return null;
+    return calculateMacros(targetCalories, profile.fitness_goal, currentWeight);
+  }, [targetCalories, profile, currentWeight]);
+
+  // Current nutrition data
+  const currentCalories = todaysNutrition?.total_calories ?? 0;
+  const currentProtein = todaysNutrition?.total_protein_g ?? 0;
+  const currentCarbs = todaysNutrition?.total_carbs_g ?? 0;
+  const currentFat = todaysNutrition?.total_fat_g ?? 0;
+
+  if (!profile || !tdeeData) {
+    return (
+      <div className="macro-recommendations-page">
+        <button className="back-button" onClick={onBack}>
+          ← Back
+        </button>
+        <div className="macro-recommendations">
+          <div className="no-recommendations">
+            <p>Complete your profile to get personalized macro recommendations</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!recommended) {
     return (
-      <div className="macro-recommendations">
-        <div className="no-recommendations">
-          <p>Complete your profile to get personalized macro recommendations</p>
+      <div className="macro-recommendations-page">
+        <button className="back-button" onClick={onBack}>
+          ← Back
+        </button>
+        <div className="macro-recommendations">
+          <div className="no-recommendations">
+            <p>Unable to calculate macro recommendations. Please check your profile settings.</p>
+          </div>
         </div>
       </div>
     );
@@ -115,7 +179,7 @@ const MacroRecommendations = ({
 
   // Goal-specific tips
   const getTips = () => {
-    switch(fitnessGoal?.toLowerCase()) {
+    switch(profile.fitness_goal?.toLowerCase()) {
       case 'lose_weight':
       case 'cut':
         return [
@@ -140,159 +204,170 @@ const MacroRecommendations = ({
   };
 
   const formatGoalName = () => {
-    switch(fitnessGoal?.toLowerCase()) {
+    switch(profile.fitness_goal?.toLowerCase()) {
       case 'lose_weight': return 'Cut (Fat Loss)';
       case 'gain_muscle': return 'Bulk (Muscle Gain)';
       case 'maintain': return 'Maintenance';
-      default: return fitnessGoal;
+      default: return profile.fitness_goal;
     }
   };
 
   return (
-    <div className="macro-recommendations">
-      <div className="recommendations-header">
-        <h3>
-          <span className="icon">🎯</span>
-          Today's Macro Targets
-        </h3>
-        <span className="goal-badge">{formatGoalName()}</span>
+    <div className="macro-recommendations-page">
+      <button className="back-button" onClick={onBack}>
+        ← Back
+      </button>
+
+      <div className="page-header">
+        <h1>🎯 Macro Recommendations</h1>
+        <p>Personalized nutrition targets based on your goals</p>
       </div>
 
-      <div className="macro-grid">
-        {/* Calories */}
-        <div className="macro-card calories">
-          <div className="macro-header">
-            <span className="macro-name">Calories</span>
-            <span className="macro-icon">🔥</span>
+      <div className="macro-recommendations">
+        <div className="recommendations-header">
+          <h3>
+            <span className="icon">🎯</span>
+            Today's Macro Targets
+          </h3>
+          <span className="goal-badge">{formatGoalName()}</span>
+        </div>
+
+        <div className="macro-grid">
+          {/* Calories */}
+          <div className="macro-card calories">
+            <div className="macro-header">
+              <span className="macro-name">Calories</span>
+              <span className="macro-icon">🔥</span>
+            </div>
+            <div className="macro-values">
+              <span className="current">{currentCalories}</span>
+              <span className="divider">/</span>
+              <span className="target">{recommended.calories}</span>
+            </div>
+            <div className="progress-container">
+              <div
+                className="progress-bar-fill calories-fill"
+                style={{ width: `${calorieProgress}%` }}
+              />
+            </div>
+            <span className="remaining">
+              {recommended.calories - currentCalories > 0
+                ? `${recommended.calories - currentCalories} remaining`
+                : `${Math.abs(recommended.calories - currentCalories)} over`
+              }
+            </span>
           </div>
-          <div className="macro-values">
-            <span className="current">{currentCalories}</span>
-            <span className="divider">/</span>
-            <span className="target">{recommended.calories}</span>
+
+          {/* Protein */}
+          <div className="macro-card protein">
+            <div className="macro-header">
+              <span className="macro-name">Protein</span>
+              <span className="macro-icon">💪</span>
+            </div>
+            <div className="macro-values">
+              <span className="current">{currentProtein.toFixed(0)}g</span>
+              <span className="divider">/</span>
+              <span className="target">{recommended.protein.grams}g</span>
+            </div>
+            <div className="progress-container">
+              <div
+                className="progress-bar-fill protein-fill"
+                style={{ width: `${proteinProgress}%` }}
+              />
+            </div>
+            <div className="macro-info">
+              <span className="macro-percent">{recommended.protein.percent}%</span>
+              <span className="macro-cal">{recommended.protein.calories} cal</span>
+            </div>
           </div>
-          <div className="progress-container">
+
+          {/* Carbs */}
+          <div className="macro-card carbs">
+            <div className="macro-header">
+              <span className="macro-name">Carbs</span>
+              <span className="macro-icon">🌾</span>
+            </div>
+            <div className="macro-values">
+              <span className="current">{currentCarbs.toFixed(0)}g</span>
+              <span className="divider">/</span>
+              <span className="target">{recommended.carbs.grams}g</span>
+            </div>
+            <div className="progress-container">
+              <div
+                className="progress-bar-fill carbs-fill"
+                style={{ width: `${carbsProgress}%` }}
+              />
+            </div>
+            <div className="macro-info">
+              <span className="macro-percent">{recommended.carbs.percent}%</span>
+              <span className="macro-cal">{recommended.carbs.calories} cal</span>
+            </div>
+          </div>
+
+          {/* Fat */}
+          <div className="macro-card fat">
+            <div className="macro-header">
+              <span className="macro-name">Fat</span>
+              <span className="macro-icon">🥑</span>
+            </div>
+            <div className="macro-values">
+              <span className="current">{currentFat.toFixed(0)}g</span>
+              <span className="divider">/</span>
+              <span className="target">{recommended.fat.grams}g</span>
+            </div>
+            <div className="progress-container">
+              <div
+                className="progress-bar-fill fat-fill"
+                style={{ width: `${fatProgress}%` }}
+              />
+            </div>
+            <div className="macro-info">
+              <span className="macro-percent">{recommended.fat.percent}%</span>
+              <span className="macro-cal">{recommended.fat.calories} cal</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Macro Distribution Chart */}
+        <div className="macro-distribution">
+          <h4>Recommended Distribution</h4>
+          <div className="distribution-bar">
             <div
-              className="progress-bar-fill calories-fill"
-              style={{ width: `${calorieProgress}%` }}
-            />
-          </div>
-          <span className="remaining">
-            {recommended.calories - currentCalories > 0
-              ? `${recommended.calories - currentCalories} remaining`
-              : `${Math.abs(recommended.calories - currentCalories)} over`
-            }
-          </span>
-        </div>
-
-        {/* Protein */}
-        <div className="macro-card protein">
-          <div className="macro-header">
-            <span className="macro-name">Protein</span>
-            <span className="macro-icon">🥩</span>
-          </div>
-          <div className="macro-values">
-            <span className="current">{currentProtein}g</span>
-            <span className="divider">/</span>
-            <span className="target">{recommended.protein.grams}g</span>
-          </div>
-          <div className="progress-container">
+              className="distribution-segment protein-segment"
+              style={{ width: `${recommended.protein.percent}%` }}
+              title={`Protein: ${recommended.protein.percent}%`}
+            >
+              <span>{recommended.protein.percent}%</span>
+            </div>
             <div
-              className="progress-bar-fill protein-fill"
-              style={{ width: `${proteinProgress}%` }}
-            />
-          </div>
-          <div className="macro-info">
-            <span className="macro-percent">{recommended.protein.percent}%</span>
-            <span className="macro-cal">{recommended.protein.calories} cal</span>
-          </div>
-        </div>
-
-        {/* Carbs */}
-        <div className="macro-card carbs">
-          <div className="macro-header">
-            <span className="macro-name">Carbs</span>
-            <span className="macro-icon">🍞</span>
-          </div>
-          <div className="macro-values">
-            <span className="current">{currentCarbs}g</span>
-            <span className="divider">/</span>
-            <span className="target">{recommended.carbs.grams}g</span>
-          </div>
-          <div className="progress-container">
+              className="distribution-segment carbs-segment"
+              style={{ width: `${recommended.carbs.percent}%` }}
+              title={`Carbs: ${recommended.carbs.percent}%`}
+            >
+              <span>{recommended.carbs.percent}%</span>
+            </div>
             <div
-              className="progress-bar-fill carbs-fill"
-              style={{ width: `${carbsProgress}%` }}
-            />
-          </div>
-          <div className="macro-info">
-            <span className="macro-percent">{recommended.carbs.percent}%</span>
-            <span className="macro-cal">{recommended.carbs.calories} cal</span>
+              className="distribution-segment fat-segment"
+              style={{ width: `${recommended.fat.percent}%` }}
+              title={`Fat: ${recommended.fat.percent}%`}
+            >
+              <span>{recommended.fat.percent}%</span>
+            </div>
           </div>
         </div>
 
-        {/* Fat */}
-        <div className="macro-card fat">
-          <div className="macro-header">
-            <span className="macro-name">Fat</span>
-            <span className="macro-icon">🥑</span>
-          </div>
-          <div className="macro-values">
-            <span className="current">{currentFat}g</span>
-            <span className="divider">/</span>
-            <span className="target">{recommended.fat.grams}g</span>
-          </div>
-          <div className="progress-container">
-            <div
-              className="progress-bar-fill fat-fill"
-              style={{ width: `${fatProgress}%` }}
-            />
-          </div>
-          <div className="macro-info">
-            <span className="macro-percent">{recommended.fat.percent}%</span>
-            <span className="macro-cal">{recommended.fat.calories} cal</span>
-          </div>
+        {/* Tips */}
+        <div className="macro-tips">
+          <h4>💡 Daily Tips</h4>
+          <ul>
+            {getTips().map((tip, index) => (
+              <li key={index}>{tip}</li>
+            ))}
+          </ul>
         </div>
-      </div>
-
-      {/* Macro Distribution Chart */}
-      <div className="macro-distribution">
-        <h4>Recommended Distribution</h4>
-        <div className="distribution-bar">
-          <div
-            className="distribution-segment protein-segment"
-            style={{ width: `${recommended.protein.percent}%` }}
-            title={`Protein: ${recommended.protein.percent}%`}
-          >
-            <span>{recommended.protein.percent}%</span>
-          </div>
-          <div
-            className="distribution-segment carbs-segment"
-            style={{ width: `${recommended.carbs.percent}%` }}
-            title={`Carbs: ${recommended.carbs.percent}%`}
-          >
-            <span>{recommended.carbs.percent}%</span>
-          </div>
-          <div
-            className="distribution-segment fat-segment"
-            style={{ width: `${recommended.fat.percent}%` }}
-            title={`Fat: ${recommended.fat.percent}%`}
-          >
-            <span>{recommended.fat.percent}%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Tips */}
-      <div className="macro-tips">
-        <h4>💡 Daily Tips</h4>
-        <ul>
-          {getTips().map((tip, index) => (
-            <li key={index}>{tip}</li>
-          ))}
-        </ul>
       </div>
     </div>
   );
-};
+}
 
-export default MacroRecommendations;
+export default MacroRecommendationsPage;

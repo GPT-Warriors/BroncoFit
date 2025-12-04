@@ -1,4 +1,38 @@
-/* Macro Recommendations - Modern Dark Theme */
+/* Macro Recommendations Page - Modern Dark Theme */
+
+.macro-recommendations-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: 6rem 2rem 3rem;
+  box-sizing: border-box;
+  width: 100vw;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.page-header {
+  text-align: center;
+  margin: 0 auto 2.5rem;
+  max-width: 1400px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.page-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 0.5rem 0;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin: 0;
+}
 
 .macro-recommendations {
   background: var(--bg-card);
@@ -7,9 +41,11 @@
   border-radius: var(--radius-lg);
   padding: 2rem;
   box-shadow: var(--shadow-lg);
-  margin-bottom: 2rem;
+  margin: 0 auto 2rem;
+  max-width: 1400px;
   position: relative;
   overflow: hidden;
+  animation: fadeInUp 0.5s ease-out 0.1s both;
 }
 
 /* Gradient accent */
@@ -341,6 +377,32 @@
   margin: 0;
 }
 
+/* Back Button */
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(26, 26, 26, 0.9);
+  backdrop-filter: blur(20px);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.back-button:hover {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: var(--accent-green);
+  box-shadow: var(--shadow-glow-green);
+  transform: translateX(-4px);
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
   .macro-grid {
@@ -349,6 +411,14 @@
 }
 
 @media (max-width: 768px) {
+  .macro-recommendations-page {
+    padding: 5rem 1rem 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+
   .macro-recommendations {
     padding: 1.5rem;
   }
@@ -383,6 +453,17 @@
   100% { transform: translateX(100%); }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -394,6 +475,6 @@
   }
 }
 
-.macro-recommendations {
+.macro-recommendations-page {
   animation: fadeIn 0.5s ease-out;
 }

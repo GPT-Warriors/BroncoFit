@@ -11,7 +11,7 @@ import WorkoutLogger from './components/WorkoutLogger';
 import NutritionLogger from './components/NutritionLogger';
 import ExerciseLibrary from './components/ExerciseLibrary';
 import AICoachPage from './components/AICoachPage';
-import MacroRecommendations from './components/MacroRecommendations';  // ✅ NEW
+import MacroRecommendationsPage from './components/MacroRecommendations';  // ✅ NEW
 import './App.css';
 
 function App() {
@@ -212,7 +212,7 @@ function App() {
 
       {/* ✅ NEW: Macro Recommendations Page */}
       {currentPage === 'macros' && user && (
-        <MacroRecommendations
+        <MacroRecommendationsPage
           onBack={() => handleNavigate('dashboard')}
           profile={profile}
           tdeeData={tdeeData}
