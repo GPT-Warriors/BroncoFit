@@ -214,11 +214,6 @@ function DashboardPage({ user, onBack, onNavigate }) {
             <span className="btn-icon">🎯</span>
             Macros
           </button>
-          {/* ✅ NEW: Food Calendar button */}
-          <button className="quick-action-btn tertiary" onClick={() => onNavigate('food-calendar')}>
-            <span className="btn-icon">📅</span>
-            Food Calendar
-          </button>
         </div>
       </div>
 
