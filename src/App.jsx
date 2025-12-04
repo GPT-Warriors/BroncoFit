@@ -115,7 +115,7 @@ function App() {
 
 
   if (currentPage === 'dashboard') {
-    return <DashboardPage user={user} onBack={handleBackToHome} onNavigate={handleNavigation} />
+    return <DashboardPage user={user} onBack={handleBackToHome} onNavigate={handleNavigation} key={Date.now()} />
   }
 
 

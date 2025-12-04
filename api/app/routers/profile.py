@@ -4,6 +4,7 @@ from app.models import ProfileCreate, ProfileUpdate, ProfileOut
 from app.dependencies import get_current_user
 from app.database import get_database
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
