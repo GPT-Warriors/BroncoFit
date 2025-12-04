@@ -159,6 +159,7 @@ function StatsPage({ onBack }) {
 
       const profileForCalc = { ...updatedProfile, activity_level: updatedProfile.activity_level };
       await runCalculation(profileForCalc, measurements);
+      alert('Profile updated successfully!');
     } catch (error) {
       console.error('Update failed', error);
       alert('Failed to update profile. Check activity level inputs.');
@@ -294,10 +295,10 @@ function StatsPage({ onBack }) {
                   onChange={(e) => setEditActivity(e.target.value)}
                 >
                   <option value="sedentary">Sedentary</option>
-                  <option value="lightly_active">Lightly Active (1-3 days/week)</option>
-                  <option value="moderately_active">Moderately Active (3-5 days/week)</option>
-                  <option value="very_active">Very Active (6-7 days/week)</option>
-                  <option value="extra_active">Extra Active (Physical job + training)</option>
+                  <option value="light">Lightly Active (1-3 days/week)</option>
+                  <option value="moderate">Moderately Active (3-5 days/week)</option>
+                  <option value="active">Very Active (6-7 days/week)</option>
+                  <option value="very_active">Extra Active (Physical job + training)</option>
                 </select>
               </div>
             </div>
@@ -329,7 +330,7 @@ function StatsPage({ onBack }) {
             )}
 
             <div className="quick-form-actions">
-              <button type="submit" className="btn-secondary">
+              <button type="submit" className="btn-primary">
                 Update Goals
               </button>
             </div>
