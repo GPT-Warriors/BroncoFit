@@ -28,7 +28,7 @@ async def register(user: UserCreate):
         "email": user.email,
         "name": user.name,
         "password_hash": get_password_hash(user.password),
-        "created_at": datetime.now(),
+        "created_at": datetime.utcnow(),
     }
 
     result = await db.users.insert_one(user_dict)

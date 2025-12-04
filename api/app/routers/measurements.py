@@ -16,11 +16,11 @@ async def create_measurement(measurement: MeasurementCreate, current_user = Depe
 
     measurement_dict = measurement.model_dump(exclude_none=True)
     measurement_dict["user_id"] = str(current_user["_id"])
-    measurement_dict["created_at"] = datetime.now()
+    measurement_dict["created_at"] = datetime.utcnow()
 
     # Use provided date or default to now
     if "measurement_date" not in measurement_dict or measurement_dict["measurement_date"] is None:
-        measurement_dict["measurement_date"] = datetime.now()
+        measurement_dict["measurement_date"] = datetime.utcnow()
 
     result = await db.measurements.insert_one(measurement_dict)
     measurement_dict["id"] = str(result.inserted_id)
