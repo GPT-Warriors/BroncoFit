@@ -159,7 +159,7 @@ function StatsPage({ onBack }) {
 
       const profileForCalc = { ...updatedProfile, activity_level: updatedProfile.activity_level };
       await runCalculation(profileForCalc, measurements);
-      alert('Profile updated successfully!');
+
     } catch (error) {
       console.error('Update failed', error);
       alert('Failed to update profile. Check activity level inputs.');
