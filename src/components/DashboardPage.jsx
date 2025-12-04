@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiService from '../services/api';
 import WorkoutCalendar from './WorkoutCalendar';
-import FoodCalendar from './FoodCalendar';  // ✅ NEW IMPORT
+import FoodCalendar from './FoodCalendar';  // ✅ NEW: Import FoodCalendar
 import './DashboardPage.css';
 
 const GOAL_OFFSETS = [250, 500, 750, 1000];
@@ -15,7 +15,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
   const [recentMeasurement, setRecentMeasurement] = useState(null);
   const [tdeeData, setTdeeData] = useState(null);
   const [calendarWorkouts, setCalendarWorkouts] = useState([]);
-  const [calendarMeals, setCalendarMeals] = useState([]);  // ✅ NEW STATE
+  const [calendarMeals, setCalendarMeals] = useState([]);  // ✅ NEW: State for meals
 
   useEffect(() => {
     loadDashboardData();
@@ -43,6 +43,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
       }
 
       if (currentProfile) {
+        // Use measurement weight if available, otherwise profile weight
         const weightForCalc = latestMeas?.weight_kg || currentProfile.current_weight_kg;
 
         try {
@@ -50,7 +51,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
             age: currentProfile.age,
             sex: currentProfile.sex,
             height_cm: currentProfile.height_cm,
-            weight_kg: weightForCalc,
+            weight_kg: weightForCalc, // <--- FIXED: Uses measured weight
             activity_level: currentProfile.activity_level,
           });
           setTdeeData(tdee);
@@ -64,14 +65,15 @@ function DashboardPage({ user, onBack, onNavigate }) {
         setTodaysNutrition(nutritionRes.value);
       }
 
-      // Handle Workouts (Calendar + Latest)
-      const workoutsRes = await apiService.getWorkouts(100, 0);
+      // 4. Handle Workouts (Calendar + Latest)
+      const workoutsRes = await apiService.getWorkouts(100, 0); // Fetch enough for calendar
 
       let rawWorkouts = [];
       if (workoutsRes && Array.isArray(workoutsRes)) {
         rawWorkouts = workoutsRes;
       }
 
+      // Determine Latest Workout (Sort by date descending)
       if (rawWorkouts.length > 0) {
         const sorted = [...rawWorkouts].sort(
           (a, b) => new Date(b.workout_date) - new Date(a.workout_date)
@@ -101,9 +103,13 @@ function DashboardPage({ user, onBack, onNavigate }) {
       setCalendarWorkouts(formattedForCalendar);
 
       // ✅ NEW: Load meals for food calendar
-      const mealsRes = await apiService.getMeals(100);
-      if (mealsRes && Array.isArray(mealsRes)) {
-        setCalendarMeals(mealsRes);
+      try {
+        const mealsRes = await apiService.getMeals(100);
+        if (mealsRes && Array.isArray(mealsRes)) {
+          setCalendarMeals(mealsRes);
+        }
+      } catch (err) {
+        console.warn("Failed to load meals:", err);
       }
 
     } catch (error) {
@@ -203,10 +209,15 @@ function DashboardPage({ user, onBack, onNavigate }) {
             <span className="btn-icon">🤖</span>
             AI Coach
           </button>
-          {/* ✅ NEW: Macro Recommendations Button */}
+          {/* ✅ NEW: Macros button */}
           <button className="quick-action-btn tertiary" onClick={() => onNavigate('macros')}>
             <span className="btn-icon">🎯</span>
             Macros
+          </button>
+          {/* ✅ NEW: Food Calendar button */}
+          <button className="quick-action-btn tertiary" onClick={() => onNavigate('food-calendar')}>
+            <span className="btn-icon">📅</span>
+            Food Calendar
           </button>
         </div>
       </div>
@@ -280,7 +291,7 @@ function DashboardPage({ user, onBack, onNavigate }) {
           </div>
         </div>
 
-        {/* TDEE / Goal Card */}
+        {/* TDEE / Goal Card - FIXED DISPLAY */}
         <div className="stat-card workout-card">
           <div className="stat-card-header">
             <span className="stat-icon">🎯</span>
